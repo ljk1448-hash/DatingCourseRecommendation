@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#ff5a7e" />
+  <title>오늘 우리, 어디 갈까?</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>오늘 우리, 어디 갈까?</h1>
+    <p class="sub">지역과 분위기를 고르면 데이트 코스를 짜드려요</p>
+  </header>
+
+  <main>
+    <!-- 1. 지역 -->
+    <section class="card">
+      <h2><span class="step">1</span> 지역</h2>
+      <div id="regions" class="chips"></div>
+    </section>
+
+    <!-- 2. 특성 -->
+    <section class="card">
+      <h2><span class="step">2</span> 원하는 분위기 <small>(여러 개 선택)</small></h2>
+      <div id="tags" class="chips"></div>
+    </section>
+
+    <!-- 3. 옵션 -->
+    <section class="card">
+      <h2><span class="step">3</span> 동선 설정</h2>
+
+      <div class="field">
+        <label for="distance">이동 거리 조절 <span id="distanceLabel" class="pill">보통 · 약 5km</span></label>
+        <input type="range" id="distance" min="1" max="20" step="1" value="5" />
+        <div class="range-hint"><span>가깝게 (도보 위주)</span><span>넓게 (차로 이동)</span></div>
+      </div>
+
+      <div class="field">
+        <label for="stops">코스 정거장 수 <span id="stopsLabel" class="pill">4곳</span></label>
+        <input type="range" id="stops" min="2" max="5" step="1" value="4" />
+      </div>
+
+      <div class="field toggle-row">
+        <label for="includeNight">야경 · 술 한잔 포함</label>
+        <label class="switch"><input type="checkbox" id="includeNight" checked /><span class="slider"></span></label>
+      </div>
+
+      <div class="field toggle-row" id="llmRow" hidden>
+        <label for="useLlm">AI 추천 멘트 받기</label>
+        <label class="switch"><input type="checkbox" id="useLlm" /><span class="slider"></span></label>
+      </div>
+    </section>
+
+    <div id="results"></div>
+  </main>
+
+  <div class="cta-bar">
+    <button id="recommendBtn">💕 코스 추천받기</button>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

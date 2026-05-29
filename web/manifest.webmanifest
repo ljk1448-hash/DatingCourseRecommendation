@@ -1,0 +1,13 @@
+{
+  "name": "오늘 우리, 어디 갈까?",
+  "short_name": "데이트코스",
+  "description": "지역과 분위기를 고르면 데이트 코스를 추천해주는 앱",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#fff6f8",
+  "theme_color": "#ff5a7e",
+  "lang": "ko",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

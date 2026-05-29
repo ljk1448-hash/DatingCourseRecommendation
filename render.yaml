@@ -1,0 +1,35 @@
+# Render Blueprint — 이 파일이 있으면 Render가 자동으로 서비스 설정을 잡아줍니다.
+# 사용법: GitHub에 코드 푸시 → Render에서 "New +" → "Blueprint" → 이 저장소 선택.
+services:
+  - type: web
+    name: date-course-recommender
+    runtime: node
+    plan: free
+    region: singapore        # 한국에서 가장 가까운 무료 리전
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # 비밀번호 보호: APP_PASSWORD 에 값을 넣으면 로그인 창이 뜹니다(나만 쓰기 권장).
+      - key: APP_USERNAME
+        value: "date"
+      - key: APP_PASSWORD
+        sync: false
+      # 아래 키들은 선택. Render 대시보드에서 값을 채우면 됩니다(없어도 시드 데이터로 동작).
+      - key: KAKAO_REST_API_KEY
+        sync: false
+      - key: KAKAO_JS_KEY
+        sync: false
+      - key: NAVER_CLIENT_ID
+        sync: false
+      - key: NAVER_CLIENT_SECRET
+        sync: false
+      - key: LLM_API_KEY
+        sync: false
+      - key: LLM_BASE_URL
+        sync: false
+      - key: LLM_MODEL
+        sync: false
