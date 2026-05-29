@@ -15,6 +15,11 @@ const DATA_PATH = join(ROOT, "data", "places.json");
 const app = express();
 app.use(express.json());
 
+// 헬스 체크 (인증 면제) — Render 등 배포 플랫폼이 200 을 받도록 인증 미들웨어보다 먼저 둔다.
+app.get("/healthz", function (req, res) {
+  res.status(200).send("ok");
+});
+
 // 간단한 비밀번호 보호 (HTTP 기본 인증)
 // APP_PASSWORD 가 설정돼 있을 때만 동작. 비어 있으면(로컬 개발) 누구나 접속 가능.
 const AUTH_USER = process.env.APP_USERNAME || "date";
