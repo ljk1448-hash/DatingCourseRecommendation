@@ -82,3 +82,11 @@ export const wishPlaces = {
   async remove(key) { wwrite(wread().filter((v) => v.key !== key)); },
   async clear() { wwrite([]); },
 };
+
+// 마지막 화면 상태(선택+결과) — 재진입 복원용
+const SKEY = "dc.session.v1";
+export const session = {
+  save(obj) { try { localStorage.setItem(SKEY, JSON.stringify({ ...obj, ts: Date.now() })); } catch { /* 무시 */ } },
+  load() { try { return JSON.parse(localStorage.getItem(SKEY)); } catch { return null; } },
+  clear() { try { localStorage.removeItem(SKEY); } catch { /* 무시 */ } },
+};

@@ -370,3 +370,19 @@ body.results-mode { padding-bottom: calc(62px + env(safe-area-inset-bottom)); }
 .act-wish.on { background: #fff4d6; border-color: #e8c95a; color: #8a6d12; }
 .act-more { font-weight: 800; }
 .act.on { background: #efe9ec; }
+
+/* 스켈레톤 로딩 */
+.course.skel { pointer-events: none; }
+.sk { background: linear-gradient(90deg, #f0e2e7 25%, #f7eef1 37%, #f0e2e7 63%); background-size: 400% 100%; animation: sk 1.2s ease-in-out infinite; border-radius: 8px; }
+@keyframes sk { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+.sk-title { height: 18px; width: 60%; margin-bottom: 10px; }
+.sk-line { height: 12px; width: 80%; margin-bottom: 12px; }
+.sk-block { height: 40px; width: 100%; margin-bottom: 14px; border-radius: 12px; }
+.sk-stop { height: 46px; width: 100%; margin-bottom: 8px; border-radius: 10px; }
+
+/* 오프라인 토스트 */
+.offline-bar {
+  position: fixed; top: calc(env(safe-area-inset-top) + 8px); left: 50%; transform: translateX(-50%);
+  z-index: 60; background: #333; color: #fff; padding: 7px 14px; border-radius: 999px;
+  font-size: 12.5px; font-weight: 700; box-shadow: 0 4px 14px rgba(0,0,0,0.25); white-space: nowrap;
+}

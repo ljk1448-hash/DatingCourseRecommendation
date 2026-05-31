@@ -1,6 +1,6 @@
 // 데이트 코스 추천 - 앱 진입/오케스트레이터 (ES 모듈)
 import { getMeta, recommend as apiRecommend, swapPlace, regionFromCoords } from "./js/api.js";
-import { savedCourses, visitedPlaces, wishPlaces, courseSignature, placeKey } from "./js/storage.js";
+import { savedCourses, visitedPlaces, wishPlaces, session, courseSignature, placeKey } from "./js/storage.js";
 import * as kmap from "./js/map.js";
 import * as kgeo from "./js/geo.js";
 import * as share from "./js/share.js";
@@ -84,8 +84,12 @@ async function init() {
   // 전역 액션 위임 (저장/지도/시트 닫기 등)
   document.addEventListener("click", onAction);
   window.addEventListener("popstate", onPopState);
+  window.addEventListener("online", updateOnline);
+  window.addEventListener("offline", updateOnline);
+  updateOnline();
   setActiveTab("home");
   updateSavedCount();
+  await restoreSession();
 }
 
 function showResultsDom() {
@@ -125,6 +129,77 @@ function onPopState() {
 function toggleMore(el) {
   const row = el.closest(".stop-body") && el.closest(".stop-body").querySelector(".stop-more");
   if (row) row.hidden = !row.hidden;
+}
+
+function updateOnline() {
+  const bar = $("#offlineBar");
+  if (bar) bar.hidden = navigator.onLine;
+}
+
+function skeletonHtml() {
+  const card = `<div class="course skel">
+    <div class="sk sk-title"></div>
+    <div class="sk sk-line"></div>
+    <div class="sk sk-block"></div>
+    <div class="sk sk-stop"></div><div class="sk sk-stop"></div><div class="sk sk-stop"></div>
+  </div>`;
+  return `<div class="result-head">지역을 검색해 코스를 짜는 중…</div>` + card + card;
+}
+
+function snapshotUI() {
+  return {
+    regions: [...state.regions],
+    tags: [...state.tags],
+    transport: state.transport,
+    budget: state.budget,
+    distance: +$("#distance").value,
+    stops: +$("#stops").value,
+    includeNight: $("#includeNight").checked,
+    nearby: $("#nearby").checked,
+    openNow: $("#openNow").checked,
+    weather: $("#weather").checked,
+    excludeVisited: $("#excludeVisited").checked,
+  };
+}
+
+function restoreUI(ui) {
+  if (!ui) return;
+  if (ui.regions && ui.regions.length) {
+    const sidoName = ui.regions[0].split(" ")[0];
+    const districts = ui.regions.map((r) => r.slice(sidoName.length + 1));
+    state.sido = sidoName;
+    renderSido(state.meta.sido || [], sidoName, districts);
+  }
+  if (ui.tags) { state.tags = new Set(ui.tags); syncTagChips(); }
+  if (ui.transport) {
+    state.transport = ui.transport;
+    document.querySelectorAll("#transport .seg").forEach((b) => b.classList.toggle("selected", b.dataset.mode === ui.transport));
+    $("#distanceField").style.display = ui.transport === "car" ? "none" : "";
+  }
+  if (ui.budget) {
+    state.budget = ui.budget;
+    document.querySelectorAll("#budget .seg").forEach((b) => b.classList.toggle("selected", b.dataset.budget === ui.budget));
+  }
+  if (Number.isFinite(ui.distance)) { const d = $("#distance"); d.value = String(ui.distance); d.dispatchEvent(new Event("input")); }
+  if (Number.isFinite(ui.stops)) { const st = $("#stops"); st.value = String(ui.stops); st.dispatchEvent(new Event("input")); }
+  if ("includeNight" in ui) $("#includeNight").checked = !!ui.includeNight;
+  if ("nearby" in ui) $("#nearby").checked = !!ui.nearby;
+  if ("openNow" in ui) $("#openNow").checked = !!ui.openNow;
+  if ("weather" in ui) $("#weather").checked = !!ui.weather;
+  if ("excludeVisited" in ui) $("#excludeVisited").checked = !!ui.excludeVisited;
+}
+
+async function restoreSession() {
+  const sv = session.load();
+  if (!sv || !sv.ui) return;
+  if (Date.now() - (sv.ts || 0) > 24 * 60 * 60 * 1000) return;
+  try {
+    restoreUI(sv.ui);
+    if (sv.data && sv.data.courses && sv.data.courses.length) {
+      await renderResults(sv.data);
+      enterResults();
+    }
+  } catch { /* 복원 실패 무시 */ }
 }
 
 function renderSido(sidoList, selSido, selDistricts) {
@@ -269,8 +344,12 @@ async function recommend() {
   const results = $("#results");
   if (!state.regions || state.regions.size === 0) { alert("지역을 한 곳 이상 골라주세요."); return; }
   enterResults();
+  if (!navigator.onLine) {
+    results.innerHTML = `<div class="empty">오프라인이에요. 인터넷에 연결되면 추천할 수 있어요.<br>저장한 코스는 ♥ 보관함에서 볼 수 있어요.</div>`;
+    return;
+  }
   btn.disabled = true;
-  results.innerHTML = `<div class="loading"><div class="heart">💗</div>지역을 검색해 코스를 짜는 중...</div>`;
+  results.innerHTML = skeletonHtml();
   results.scrollIntoView({ behavior: "smooth", block: "start" });
 
   const excludePlaces = $("#excludeVisited").checked ? await visitedPlaces.keys() : [];
@@ -297,6 +376,7 @@ async function recommend() {
   try {
     const data = await apiRecommend(body);
     await renderResults(data);
+    session.save({ ui: snapshotUI(), data });
   } catch {
     results.innerHTML = `<div class="empty">추천 중 오류가 발생했어요. 다시 시도해 주세요.</div>`;
   } finally {

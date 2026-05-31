@@ -1,9 +1,9 @@
 // 간단한 오프라인 캐시용 서비스 워커
-const CACHE = "date-course-v10";
+const CACHE = "date-course-v11";
 const ASSETS = [
   "./", "./index.html", "./styles.css", "./app.js",
   "./js/api.js", "./js/storage.js", "./js/map.js", "./js/geo.js", "./js/share.js",
-  "./icon.svg", "./manifest.webmanifest",
+  "./icon.svg", "./icon-192.png", "./icon-512.png", "./icon-180.png", "./manifest.webmanifest",
 ];
 
 self.addEventListener("install", (e) => {
