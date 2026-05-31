@@ -318,3 +318,7 @@ input[type="range"]::-moz-range-thumb {
 
 /* hidden 속성이 항상 우선하도록 (overlay/toggle-row 의 display 규칙 덮어쓰기 방지) */
 [hidden] { display: none !important; }
+
+/* 전체 선택 칩 */
+.chip-all { font-weight: 700; border-style: dashed; }
+.chip-all.selected { background: var(--rose); border-color: var(--rose); color: #fff; border-style: solid; }

@@ -186,6 +186,17 @@ async function getRegionWeather(region, places) {
   }
 }
 
+// 동시 호출 제한 (여러 지역을 한 번에 검색할 때 과도한 동시요청 방지)
+async function mapLimit(items, limit, fn) {
+  const ret = new Array(items.length);
+  let i = 0;
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (i < items.length) { const idx = i++; ret[idx] = await fn(items[idx]); }
+  });
+  await Promise.all(workers);
+  return ret;
+}
+
 const app = express();
 app.use(express.json());
 
@@ -259,11 +270,16 @@ app.post("/api/recommend", async function (req, res) {
     const excludeKeys = Array.isArray(body.excludePlaces) ? body.excludePlaces : [];
     const useLlm = !!body.useLlm;
 
-    const regionsList = nearby ? [region, ...neighborRegions(region)] : [region];
-    const placeArrays = await Promise.all(regionsList.map((rg) => getRegionPlaces(rg, budget)));
+    const baseRegions = Array.isArray(body.regions) && body.regions.length ? [...new Set(body.regions)] : [region];
+    const primary = baseRegions[0];
+    let regionsList = [...baseRegions];
+    if (nearby) regionsList.push(...neighborRegions(primary));
+    regionsList = [...new Set(regionsList)];
+
+    const placeArrays = await mapLimit(regionsList, 4, (rg) => getRegionPlaces(rg, budget));
     const places = placeArrays.flat();
     if (!places.length) {
-      return res.json({ region, courses: [], message: liveEnabled ? "이 지역에서 장소를 찾지 못했어요. 다른 지역을 골라보세요." : "서버에 검색 키가 없어 장소를 가져올 수 없어요." });
+      return res.json({ region: primary, courses: [], message: liveEnabled ? "이 지역에서 장소를 찾지 못했어요. 다른 지역을 골라보세요." : "서버에 검색 키가 없어 장소를 가져올 수 없어요." });
     }
 
     // 시간대 + 날씨에 따른 제외 카테고리
@@ -271,12 +287,12 @@ app.post("/api/recommend", async function (req, res) {
     if (openNow) closedCategoriesAt(hour).forEach((c) => excludeCategories.add(c));
     let weather = null;
     if (useWeather) {
-      weather = await getRegionWeather(region, places);
+      weather = await getRegionWeather(primary, places);
       if (weather && weather.rainy) { excludeCategories.add("walk"); excludeCategories.add("nightview"); }
     }
 
     const result = recommendCourses({
-      places, region, regions: regionsList, tags,
+      places, region: primary, regions: regionsList, tags,
       distanceKm: Number(distanceKm), stops: Number(stops),
       includeNight: !!includeNight, mode, budget,
       excludeCategories: [...excludeCategories], excludeKeys,

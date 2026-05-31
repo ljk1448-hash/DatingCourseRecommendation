@@ -7,10 +7,10 @@ import * as share from "./js/share.js";
 
 const state = {
   sido: null,
-  region: null,
   tags: new Set(),
   transport: "walk",
   budget: "normal",
+  regions: new Set(),
   lastBody: null,
   meta: null,
 };
@@ -86,7 +86,7 @@ async function init() {
   updateSavedCount();
 }
 
-function renderSido(sidoList, selSido, selDistrict) {
+function renderSido(sidoList, selSido, selDistricts) {
   const box = $("#sido");
   box.innerHTML = "";
   let chosen = null;
@@ -108,35 +108,64 @@ function renderSido(sidoList, selSido, selDistrict) {
   if (start) {
     if (!chosen) box.querySelector(".chip")?.classList.add("selected");
     state.sido = start.name;
-    renderDistricts(start, selDistrict);
+    renderDistricts(start, selDistricts);
   }
 }
 
-function renderDistricts(sido, selDistrict) {
+function renderDistricts(sido, selDistricts) {
   const box = $("#districts");
   box.innerHTML = "";
-  const sel = selDistrict && sido.districts.includes(selDistrict) ? selDistrict : sido.districts[0];
+  const valid = (selDistricts && selDistricts.length ? selDistricts : [sido.districts[0]])
+    .filter((d) => sido.districts.includes(d));
+  state.regions = new Set((valid.length ? valid : [sido.districts[0]]).map((d) => `${sido.name} ${d}`));
+
+  // 전체 선택 칩
+  const allChip = document.createElement("div");
+  allChip.className = "chip chip-all";
+  allChip.addEventListener("click", () => {
+    const allOn = sido.districts.every((d) => state.regions.has(`${sido.name} ${d}`));
+    state.regions = allOn
+      ? new Set([`${sido.name} ${sido.districts[0]}`])
+      : new Set(sido.districts.map((d) => `${sido.name} ${d}`));
+    syncDistrictChips(sido);
+  });
+  box.appendChild(allChip);
+
   sido.districts.forEach((d) => {
     const full = `${sido.name} ${d}`;
-    const on = d === sel;
     const el = document.createElement("div");
-    el.className = "chip" + (on ? " selected" : "");
+    el.className = "chip";
+    el.dataset.full = full;
     el.textContent = d;
-    if (on) state.region = full;
     el.addEventListener("click", () => {
-      box.querySelectorAll(".chip").forEach((c) => c.classList.remove("selected"));
-      el.classList.add("selected");
-      state.region = full;
+      if (state.regions.has(full)) {
+        if (state.regions.size > 1) state.regions.delete(full); // 최소 1개 유지
+      } else {
+        state.regions.add(full);
+      }
+      syncDistrictChips(sido);
     });
     box.appendChild(el);
   });
-  const selEl = [...box.children].find((c) => c.textContent === sel);
-  if (selEl) selEl.scrollIntoView({ block: "nearest" });
+  syncDistrictChips(sido);
+}
+
+function syncDistrictChips(sido) {
+  const box = $("#districts");
+  box.querySelectorAll(".chip[data-full]").forEach((el) => {
+    el.classList.toggle("selected", state.regions.has(el.dataset.full));
+  });
+  const allChip = box.querySelector(".chip-all");
+  if (allChip) {
+    const allOn = sido.districts.every((d) => state.regions.has(`${sido.name} ${d}`));
+    allChip.classList.toggle("selected", allOn);
+    allChip.textContent = allOn ? "✓ 전체" : "전체";
+  }
 }
 
 function selectRegion(sido, district) {
   state.sido = sido;
-  renderSido(state.meta.sido || [], sido, district);
+  renderSido(state.meta.sido || [], sido, [district]);
 }
 
 async function useCurrentLocation() {
@@ -170,6 +199,12 @@ function randomRecommend() {
   state.transport = Math.random() < 0.5 ? "walk" : "car";
   document.querySelectorAll("#transport .seg").forEach((b) => b.classList.toggle("selected", b.dataset.mode === state.transport));
   $("#distanceField").style.display = state.transport === "car" ? "none" : "";
+  // 도보면 거리도 무작위(1~14km), 슬라이더/라벨 반영
+  if (state.transport === "walk") {
+    const dist = $("#distance");
+    dist.value = String(1 + Math.floor(Math.random() * 14));
+    dist.dispatchEvent(new Event("input"));
+  }
   recommend();
 }
 
@@ -191,13 +226,16 @@ function renderTags(tags) {
 async function recommend() {
   const btn = $("#recommendBtn");
   const results = $("#results");
+  if (!state.regions || state.regions.size === 0) { alert("지역을 한 곳 이상 골라주세요."); return; }
   btn.disabled = true;
   results.innerHTML = `<div class="loading"><div class="heart">💗</div>지역을 검색해 코스를 짜는 중...</div>`;
   results.scrollIntoView({ behavior: "smooth", block: "start" });
 
   const excludePlaces = $("#excludeVisited").checked ? await visitedPlaces.keys() : [];
+  const regions = [...state.regions];
   const body = {
-    region: state.region,
+    region: regions[0],
+    regions,
     tags: [...state.tags],
     mode: state.transport,
     budget: state.budget,
