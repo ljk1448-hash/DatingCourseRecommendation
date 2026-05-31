@@ -1,0 +1,13 @@
+{
+  "appId": "com.ljk1448.datecourse",
+  "appName": "오늘 우리, 어디 갈까",
+  "webDir": "web",
+  "backgroundColor": "#fff6f8",
+  "android": {
+    "backgroundColor": "#fff6f8"
+  },
+  "ios": {
+    "backgroundColor": "#fff6f8",
+    "contentInset": "always"
+  }
+}

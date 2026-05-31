@@ -205,6 +205,24 @@ app.get("/healthz", function (req, res) {
   res.status(200).send("ok");
 });
 
+// CORS — 네이티브 앱(Capacitor 웹뷰) 등 다른 출처에서의 API 호출 허용
+const ALLOWED_ORIGINS = new Set([
+  "capacitor://localhost", "ionic://localhost",
+  "http://localhost", "https://localhost",
+]);
+app.use(function (req, res, next) {
+  const origin = req.headers.origin;
+  if (origin && (ALLOWED_ORIGINS.has(origin) || /^https?:\/\/localhost(:\d+)?$/.test(origin))) {
+    res.set("Access-Control-Allow-Origin", origin);
+    res.set("Vary", "Origin");
+    res.set("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+    res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.set("Access-Control-Allow-Credentials", "true");
+  }
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
+});
+
 // 간단한 비밀번호 보호 (HTTP 기본 인증)
 const AUTH_USER = process.env.APP_USERNAME || "date";
 const AUTH_PASS = process.env.APP_PASSWORD || "";

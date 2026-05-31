@@ -38,6 +38,20 @@ npm start            # http://localhost:3000
 
 `render.yaml` 기반 Render 배포. 자세한 절차는 [DEPLOY.md](DEPLOY.md), 구조·확장 포인트는 [ARCHITECTURE.md](ARCHITECTURE.md) 참고.
 
+## 스토어 앱 출시 (안드로이드 · 아이폰)
+
+Capacitor로 이 PWA를 네이티브 앱으로 패키징해 Google Play·App Store에 올릴 수 있습니다.
+네이티브 앱은 화면(`web/`)을 내장하고, API는 배포 서버(`web/js/config.js`의 `REMOTE_API`)로 호출합니다.
+계정 비용·빌드·서명·제출까지 초보자용 단계별 안내는 **[STORE.md](STORE.md)** 참고.
+
+```bash
+npm install
+npm run cap:assets        # 아이콘/스플래시 생성(resources/)
+npm run cap:add:android   # 안드로이드 프로젝트 생성(윈도우 가능, 최초 1회)
+npm run cap:sync          # 코드 변경분을 앱에 반영
+npm run cap:open:android  # Android Studio 열기
+```
+
 ## 폴더 구조 (요약)
 
 ```
@@ -46,4 +60,7 @@ src/                geo · recommend · sources · llm
 server/index.js     Express API (인증·캐시·근교)
 web/                PWA (app.js + js/api·storage·map)
 scripts/collect.js  (선택) 사전수집 배치
+capacitor.config.json  네이티브 패키징 설정
+resources/          앱 아이콘·스플래시 소스
+STORE.md            스토어 출시 가이드
 ```

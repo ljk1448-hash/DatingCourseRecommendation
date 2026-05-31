@@ -1,18 +1,31 @@
 {
   "name": "date-course-recommender",
   "version": "0.1.0",
-  "description": "지역과 원하는 특성을 고르면 조건에 맞는 데이트 코스를 추천하는 개인용 모바일 웹앱(PWA)",
+  "description": "지역과 원하는 특성을 고르면 조건에 맞는 데이트 코스를 추천하는 모바일 웹앱(PWA) + Capacitor 네이티브 패키징",
   "type": "module",
   "scripts": {
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
-    "collect": "node scripts/collect.js"
+    "collect": "node scripts/collect.js",
+    "cap:add:android": "cap add android",
+    "cap:add:ios": "cap add ios",
+    "cap:sync": "cap sync",
+    "cap:assets": "capacitor-assets generate --assetPath resources",
+    "cap:open:android": "cap open android",
+    "cap:open:ios": "cap open ios"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "dependencies": {
     "express": "^4.19.2",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "@capacitor/core": "^8.3.4",
+    "@capacitor/android": "^8.3.4",
+    "@capacitor/ios": "^8.3.4"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.3.4",
+    "@capacitor/assets": "^3.0.5"
   }
 }

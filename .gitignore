@@ -2,3 +2,25 @@ node_modules/
 .env
 *.log
 .DS_Store
+
+# 임시 리소스(아이콘 생성용 중간파일)
+resources/_*
+
+# 서명키/비밀값 — 절대 커밋 금지
+*.keystore
+*.jks
+key.properties
+android/key.properties
+
+# Capacitor 네이티브 빌드 산출물
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/app/release/
+ios/App/Pods/
+ios/App/build/
+DerivedData/
+
+# @capacitor/assets 생성 캐시
+.capacitor-assets/
