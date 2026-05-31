@@ -218,3 +218,72 @@ export async function kakaoCoord2Region(lat, lng, kakaoKey) {
   if (!doc) return null;
   return { sido1: doc.region_1depth_name, region2: doc.region_2depth_name };
 }
+
+// ── 내 주변 검색 (좌표 기준 카테고리 검색) ──
+// 카카오 카테고리 그룹: FD6 음식점, CE7 카페, CT1 문화시설, AT4 관광명소
+export async function kakaoCategory(lat, lng, code, kakaoKey, radius = 1500, size = 15) {
+  const url = new URL("https://dapi.kakao.com/v2/local/search/category.json");
+  url.searchParams.set("category_group_code", code);
+  url.searchParams.set("x", String(lng));
+  url.searchParams.set("y", String(lat));
+  url.searchParams.set("radius", String(Math.min(Math.max(radius, 100), 20000)));
+  url.searchParams.set("sort", "distance");
+  url.searchParams.set("size", String(size));
+  const res = await fetch(url, { headers: { Authorization: `KakaoAK ${kakaoKey}` } });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    const err = new Error(`kakao ${res.status}: ${body.slice(0, 200)}`);
+    err.status = res.status;
+    throw err;
+  }
+  const data = await res.json();
+  return data.documents || [];
+}
+
+const NEARBY_CATS = [
+  { code: "FD6", category: "meal", tags: ["맛집"] },
+  { code: "CE7", category: "cafe", tags: ["카페"] },
+  { code: "CT1", category: "culture", tags: ["전시/문화"] },
+  { code: "AT4", category: "walk", tags: ["산책", "사진맛집"] },
+];
+
+// 현재 좌표 주변의 데이트 장소들을 카테고리별로 모아 거리순 정렬
+export async function fetchNearbyPlaces(lat, lng, kakaoKey, radius = 1500) {
+  const batches = await Promise.all(
+    NEARBY_CATS.map((c) =>
+      kakaoCategory(lat, lng, c.code, kakaoKey, radius)
+        .then((docs) =>
+          docs.map((d) => ({
+            id: `k-${d.id || slugify(d.place_name)}`,
+            name: d.place_name,
+            category: refineCategory(c.category, d.category_group_code),
+            categoryName: stripHtml(d.category_name || ""),
+            lat: Number(d.y),
+            lng: Number(d.x),
+            tags: [...c.tags],
+            address: d.road_address_name || d.address_name || "",
+            phone: (d.phone || "").trim(),
+            url: d.place_url || "",
+            distance: Number(d.distance) || null,
+          }))
+        )
+        .catch((e) => {
+          if (e.status === 401 || e.status === 403) throw e;
+          return [];
+        })
+    )
+  );
+  const seen = new Set();
+  const places = [];
+  for (const batch of batches) {
+    for (const p of batch) {
+      if (!p.name || !Number.isFinite(p.lat) || !Number.isFinite(p.lng)) continue;
+      const key = p.name + "|" + p.address;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      places.push(p);
+    }
+  }
+  places.sort((a, b) => (a.distance ?? 1e9) - (b.distance ?? 1e9));
+  return places;
+}

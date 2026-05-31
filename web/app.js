@@ -1,5 +1,5 @@
 // 데이트 코스 추천 - 앱 진입/오케스트레이터 (ES 모듈)
-import { getMeta, recommend as apiRecommend, swapPlace, regionFromCoords } from "./js/api.js";
+import { getMeta, recommend as apiRecommend, swapPlace, regionFromCoords, nearby } from "./js/api.js";
 import { savedCourses, visitedPlaces, wishPlaces, session, courseSignature, placeKey } from "./js/storage.js";
 import * as kmap from "./js/map.js";
 import * as kgeo from "./js/geo.js";
@@ -13,6 +13,8 @@ const state = {
   regions: new Set(),
   lastBody: null,
   meta: null,
+  nearbyData: null,
+  nearbyFilter: "all",
 };
 
 // 화면에 렌더된 코스를 시그니처로 보관 (저장/지도 버튼에서 조회)
@@ -94,16 +96,22 @@ async function init() {
 
 function showResultsDom() {
   $("#settingsView").hidden = true;
+  $("#nearbyView").hidden = true;
+  $("#results").hidden = false;
   document.querySelector(".cta-bar").hidden = true;
   $("#resultsBar").hidden = false;
   document.body.classList.add("results-mode");
+  document.body.classList.remove("nearby-mode");
   window.scrollTo({ top: 0 });
 }
 function showSettingsDom() {
   $("#settingsView").hidden = false;
+  $("#results").hidden = false;
+  $("#nearbyView").hidden = true;
   document.querySelector(".cta-bar").hidden = false;
   $("#resultsBar").hidden = true;
   document.body.classList.remove("results-mode");
+  document.body.classList.remove("nearby-mode");
   window.scrollTo({ top: 0 });
   setActiveTab("home");
 }
@@ -111,6 +119,114 @@ function enterResults() {
   if (document.body.classList.contains("results-mode")) return;
   showResultsDom();
   history.pushState({ layer: "results" }, "");
+}
+
+// ── 내 주변 ──
+const NEAR_FILTERS = [
+  { k: "all", label: "전체" },
+  { k: "meal", label: "맛집" },
+  { k: "cafe", label: "카페" },
+  { k: "culture", label: "전시·문화" },
+  { k: "walk", label: "명소·산책" },
+];
+function nearFilterMatch(p) {
+  const f = state.nearbyFilter || "all";
+  return f === "all" ? true : p.category === f;
+}
+
+function showNearbyDom() {
+  $("#settingsView").hidden = true;
+  $("#results").hidden = true;
+  $("#nearbyView").hidden = false;
+  document.querySelector(".cta-bar").hidden = true;
+  $("#resultsBar").hidden = true;
+  document.body.classList.add("nearby-mode");
+  document.body.classList.remove("results-mode");
+  setActiveTab("nearby");
+  window.scrollTo({ top: 0 });
+}
+
+async function openNearby() {
+  if (document.body.classList.contains("nearby-mode")) return;
+  $("#mapModal").hidden = true;
+  $("#savedPanel").hidden = true;
+  showNearbyDom();
+  history.pushState({ layer: "nearby" }, "");
+  if (state.nearbyData) await renderNearby(state.nearbyData);
+  else loadNearby();
+}
+
+function loadNearby() {
+  const listEl = $("#nearbyList");
+  $("#nearbyMap").style.display = "none";
+  if (!navigator.onLine) { listEl.innerHTML = `<div class="empty">오프라인이에요. 연결되면 주변을 볼 수 있어요.</div>`; return; }
+  if (!navigator.geolocation) { listEl.innerHTML = `<div class="empty">이 기기에선 위치를 쓸 수 없어요.</div>`; return; }
+  listEl.innerHTML = `<div class="loading"><div class="heart">💗</div>내 주변을 찾는 중…</div>`;
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    try {
+      const data = await nearby(pos.coords.latitude, pos.coords.longitude);
+      if (data && data.error) { listEl.innerHTML = `<div class="empty">${data.error}</div>`; return; }
+      state.nearbyData = data;
+      await renderNearby(data);
+    } catch { listEl.innerHTML = `<div class="empty">주변 정보를 가져오지 못했어요. 잠시 후 다시 시도해 주세요.</div>`; }
+  }, () => {
+    listEl.innerHTML = `<div class="empty">위치 권한이 필요해요.<br>권한을 허용한 뒤 ↻ 새로고침을 눌러주세요.</div>`;
+  }, { timeout: 9000, enableHighAccuracy: true });
+}
+
+async function renderNearby(data) {
+  if (!data) return;
+  $("#nearbyTitle").textContent = data.region ? `${data.region} 주변` : "내 주변";
+  $("#nearbyFilters").innerHTML = NEAR_FILTERS.map((f) =>
+    `<button class="nf ${(state.nearbyFilter || "all") === f.k ? "selected" : ""}" type="button" data-action="near-filter" data-k="${f.k}">${f.label}</button>`
+  ).join("");
+
+  const items = (data.places || []).filter(nearFilterMatch);
+  const mapEl = $("#nearbyMap");
+  const key = state.meta?.kakaoJsKey || data.kakaoJsKey;
+  if (key && items.length) {
+    mapEl.style.display = "";
+    kmap.renderNearbyMap(mapEl, data.center, items.slice(0, 30), key).catch(() => { mapEl.style.display = "none"; });
+  } else {
+    mapEl.style.display = "none";
+  }
+
+  const wishKeys = new Set(await wishPlaces.keys());
+  const box = $("#nearbyList");
+  box.innerHTML = items.length
+    ? items.map((p) => nearItemHtml(p, data.region, wishKeys)).join("")
+    : `<div class="empty">주변에서 찾은 장소가 없어요.</div>`;
+}
+
+function nearItemHtml(p, region, wishKeys) {
+  const rg = p.region || region || "";
+  const dist = p.distance != null ? (p.distance >= 1000 ? `${(p.distance / 1000).toFixed(1)}km` : `${p.distance}m`) : "";
+  const thumb = p.image && p.image.thumb
+    ? `<img class="near-thumb" src="${p.image.thumb}" alt="${escapeHtml(p.name)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none'">`
+    : `<div class="near-thumb"></div>`;
+  const wished = wishKeys ? wishKeys.has(placeKey({ name: p.name, region: rg })) : false;
+  const phone = p.phone ? String(p.phone).replace(/[^0-9+\-]/g, "") : "";
+  return `<div class="near-item">
+    ${thumb}
+    <div class="near-body">
+      <div class="near-cat">${escapeHtml(p.categoryLabel || "")}${dist ? ` · <span class="near-dist">${dist}</span>` : ""}</div>
+      <div class="near-name"><a href="${p.url || kmap.searchUrl(p.name)}" target="_blank" rel="noopener">${escapeHtml(p.name)}</a></div>
+      <div class="near-addr">${escapeHtml(p.address || p.categoryName || "")}</div>
+      <div class="near-actions">
+        <a class="act act-go" href="${kmap.directionsUrl(p)}" target="_blank" rel="noopener">🧭 길찾기</a>
+        ${phone ? `<a class="act" href="tel:${phone}">📞 전화</a>` : ""}
+        <button class="act act-wish ${wished ? "on" : ""}" type="button" data-action="wish" data-name="${escapeHtml(p.name)}" data-region="${escapeHtml(rg)}">${wished ? "💛 찜" : "🤍 찜"}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function nearbyToCourse() {
+  const data = state.nearbyData;
+  if (!data || !data.region) { alert("현재 위치의 지역을 찾지 못했어요. 잠시 후 다시 시도해 주세요."); return; }
+  const parts = data.region.split(" ");
+  selectRegion(parts[0], parts.slice(1).join(" "));
+  recommend();
 }
 function setActiveTab(name) {
   document.querySelectorAll(".tabbar .tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === name));
@@ -123,8 +239,9 @@ function goHome() {
 // 하드웨어/스와이프 뒤로가기 → 위에 떠 있는 것부터 닫기
 function onPopState() {
   if (!$("#mapModal").hidden) { $("#mapModal").hidden = true; return; }
-  if (!$("#savedPanel").hidden) { $("#savedPanel").hidden = true; setActiveTab("home"); return; }
+  if (!$("#savedPanel").hidden) { $("#savedPanel").hidden = true; setActiveTab(document.body.classList.contains("nearby-mode") ? "nearby" : "home"); return; }
   if (document.body.classList.contains("results-mode")) { showSettingsDom(); return; }
+  if (document.body.classList.contains("nearby-mode")) { showSettingsDom(); return; }
 }
 function toggleMore(el) {
   const row = el.closest(".stop-body") && el.closest(".stop-body").querySelector(".stop-more");
@@ -255,7 +372,12 @@ function renderDistricts(sido, selDistricts) {
     el.textContent = d;
     el.addEventListener("click", () => {
       if (state.regions.has(full)) {
-        if (state.regions.size > 1) state.regions.delete(full); // 최소 1개 유지
+        if (state.regions.size > 1) {
+          state.regions.delete(full);
+        } else {
+          // 마지막 한 곳을 다시 누르면 비우지 않고 '전체'로 전환
+          state.regions = new Set(sido.districts.map((dd) => `${sido.name} ${dd}`));
+        }
       } else {
         state.regions.add(full);
       }
@@ -569,7 +691,11 @@ function onAction(e) {
   if (a === "back-settings") return history.back();
   if (a === "redo") return recommend();
   if (a === "tab-home") return goHome();
+  if (a === "tab-nearby") return openNearby();
   if (a === "tab-saved") return openSaved();
+  if (a === "nearby-refresh") { state.nearbyData = null; return loadNearby(); }
+  if (a === "near-filter") { state.nearbyFilter = el.dataset.k; return renderNearby(state.nearbyData); }
+  if (a === "near-course") return nearbyToCourse();
   if (a === "more") return toggleMore(el);
 }
 

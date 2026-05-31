@@ -386,3 +386,25 @@ body.results-mode { padding-bottom: calc(62px + env(safe-area-inset-bottom)); }
   z-index: 60; background: #333; color: #fff; padding: 7px 14px; border-radius: 999px;
   font-size: 12.5px; font-weight: 700; box-shadow: 0 4px 14px rgba(0,0,0,0.25); white-space: nowrap;
 }
+
+/* ── 내 주변 탭 ── */
+.nearby-head { display: flex; align-items: center; justify-content: space-between; margin: 2px 4px 12px; }
+.nearby-head b { font-size: 16px; }
+.nearby-head .rb-btn { background: var(--rose-soft); color: var(--rose-deep); }
+.nearby-map { height: 36vh; margin-bottom: 12px; }
+.near-cta { width: 100%; background: var(--rose); color: #fff; border: none; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 700; box-shadow: 0 6px 16px rgba(226,62,99,0.3); cursor: pointer; margin-bottom: 12px; }
+.near-cta:active { transform: scale(0.99); }
+.nearby-filters { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 6px; -webkit-overflow-scrolling: touch; }
+.nf { flex: 0 0 auto; border: 1.5px solid var(--line); background: #fff; color: var(--ink); padding: 6px 13px; border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.nf.selected { background: var(--rose-soft); border-color: var(--rose); color: var(--rose-deep); }
+.near-item { display: flex; gap: 12px; background: var(--card); border-radius: 14px; padding: 12px; margin-bottom: 10px; box-shadow: var(--shadow); }
+.near-thumb { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; background: #f0e2e7; flex: 0 0 auto; }
+.near-body { flex: 1; min-width: 0; }
+.near-cat { font-size: 11.5px; color: var(--rose-deep); font-weight: 700; }
+.near-dist { color: var(--muted); }
+.near-name { font-size: 15px; font-weight: 700; margin: 1px 0 2px; }
+.near-name a { color: inherit; text-decoration: none; border-bottom: 1px dashed var(--line); }
+.near-addr { font-size: 12px; color: var(--muted); line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.near-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.map-me { background: #3b82f6; color: #fff; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.3); white-space: nowrap; }
+body.nearby-mode { padding-bottom: calc(62px + env(safe-area-inset-bottom)); }

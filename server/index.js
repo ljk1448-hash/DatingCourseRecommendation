@@ -7,7 +7,7 @@ import { timingSafeEqual, createHash } from "node:crypto";
 
 import { recommendCourses } from "../src/recommend.js";
 import { describeCourse, llmEnabled } from "../src/llm.js";
-import { fetchRegionPlaces, naverBlog, naverImage, naverLocal, kakaoCoord2Region } from "../src/sources.js";
+import { fetchRegionPlaces, fetchNearbyPlaces, naverBlog, naverImage, naverLocal, kakaoCoord2Region } from "../src/sources.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..");
@@ -393,6 +393,46 @@ app.get("/api/region-from-coords", async function (req, res) {
     const d2 = r.region2 || "";
     const district = sidoObj.districts.find((d) => d2.includes(d) || (d2 && d.includes(d2))) || sidoObj.districts[0];
     res.json({ sido: sidoObj.name, district, region: `${sidoObj.name} ${district}` });
+  } catch (err) {
+    res.status(502).json({ error: kakaoErrorMessage(err) });
+  }
+});
+
+// 내 주변: 현재 좌표 기준 가까운 데이트 장소 (지도+리스트)
+app.get("/api/nearby", async function (req, res) {
+  try {
+    if (!liveEnabled) return res.status(400).json({ error: "서버에 검색 키가 없어요." });
+    const lat = Number(req.query.lat);
+    const lng = Number(req.query.lng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return res.status(400).json({ error: "좌표가 올바르지 않아요." });
+    const radius = Math.min(Math.max(Number(req.query.radius) || 1500, 300), 5000);
+
+    let places = await fetchNearbyPlaces(lat, lng, KAKAO_KEY, radius);
+    places = places.slice(0, 24).map((p) => ({ ...p, categoryLabel: CATEGORY_LABEL[p.category] || p.category }));
+
+    // 현재 지역(시/도·구) 추정
+    let region = null;
+    try {
+      const r = await kakaoCoord2Region(lat, lng, KAKAO_KEY);
+      if (r) {
+        const sido = SIDO_NAME_MAP[r.sido1] || String(r.sido1 || "").replace(/(특별자치시|특별자치도|특별시|광역시|도)$/, "");
+        region = `${sido} ${r.region2 || ""}`.trim();
+      }
+    } catch {}
+
+    // 대표 사진 보강 (상위 일부, 네이버 키 있을 때)
+    if (naverEnabled) {
+      await Promise.all(
+        places.slice(0, 12).map(async (p) => {
+          try {
+            const img = await naverImage(`${p.name} ${region || ""}`, NAVER_ID, NAVER_SECRET);
+            if (img && img.thumb) p.image = { thumb: img.thumb, link: img.link };
+          } catch {}
+        })
+      );
+    }
+
+    res.json({ region, center: { lat, lng }, radius, places, kakaoJsKey: process.env.KAKAO_JS_KEY || null });
   } catch (err) {
     res.status(502).json({ error: kakaoErrorMessage(err) });
   }

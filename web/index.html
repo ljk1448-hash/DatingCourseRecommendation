@@ -101,6 +101,17 @@
 
     </div>
     <div id="results"></div>
+
+    <div id="nearbyView" hidden>
+      <div class="nearby-head">
+        <b id="nearbyTitle">내 주변</b>
+        <button class="rb-btn" type="button" data-action="nearby-refresh">↻ 새로고침</button>
+      </div>
+      <div id="nearbyMap" class="map-box nearby-map"></div>
+      <button class="near-cta" type="button" data-action="near-course">💕 이 근처로 코스 짜기</button>
+      <div id="nearbyFilters" class="nearby-filters"></div>
+      <div id="nearbyList"></div>
+    </div>
   </main>
 
   <div class="cta-bar">
@@ -126,6 +137,7 @@
 
   <nav class="tabbar">
     <button class="tab active" type="button" data-action="tab-home" data-tab="home"><span class="tab-ico">🏠</span><span>추천</span></button>
+    <button class="tab" type="button" data-action="tab-nearby" data-tab="nearby"><span class="tab-ico">📍</span><span>내 주변</span></button>
     <button class="tab" type="button" data-action="tab-saved" data-tab="saved"><span class="tab-ico">♥</span><span>보관함 <span id="savedCount">0</span></span></button>
   </nav>
 

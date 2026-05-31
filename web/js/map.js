@@ -49,3 +49,22 @@ export function naverBlogSearchUrl(name, region) {
   const q = `${name} ${region || ""}`.trim();
   return `https://search.naver.com/search.naver?where=blog&query=${encodeURIComponent(q)}`;
 }
+
+// 내 주변 지도: 내 위치 + 주변 장소 마커. JS 키 없거나 실패 시 throw → 호출측 폴백.
+export async function renderNearbyMap(container, center, places, jsKey) {
+  const kakao = await loadSdk(jsKey);
+  container.innerHTML = "";
+  const me = new kakao.maps.LatLng(center.lat, center.lng);
+  const map = new kakao.maps.Map(container, { center: me, level: 5 });
+  new kakao.maps.CustomOverlay({ position: me, map, yAnchor: 1.4, content: `<div class="map-me">내 위치</div>` });
+  const bounds = new kakao.maps.LatLngBounds();
+  bounds.extend(me);
+  (places || []).forEach((p) => {
+    if (!Number.isFinite(p.lat) || !Number.isFinite(p.lng)) return;
+    const pos = new kakao.maps.LatLng(p.lat, p.lng);
+    new kakao.maps.Marker({ position: pos, map });
+    bounds.extend(pos);
+  });
+  map.setBounds(bounds);
+  return map;
+}
