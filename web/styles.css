@@ -315,3 +315,6 @@ input[type="range"]::-moz-range-thumb {
   border: 1px solid var(--line); background: #fff; color: var(--muted); cursor: pointer;
 }
 .stop-wish.on { background: #fff4d6; border-color: #e8c95a; color: #8a6d12; font-weight: 700; }
+
+/* hidden 속성이 항상 우선하도록 (overlay/toggle-row 의 display 규칙 덮어쓰기 방지) */
+[hidden] { display: none !important; }
