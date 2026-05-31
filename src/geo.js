@@ -30,3 +30,8 @@ export function travelKm(a, b, detourFactor = 1.3) {
 export function walkMinutes(km) {
   return Math.round((km / 4.5) * 60);
 }
+
+/** 차량 이동 예상 시간(분). 도심 평균 24km/h 가정(신호·주차 포함 대략치). */
+export function driveMinutes(km) {
+  return Math.max(1, Math.round((km / 24) * 60));
+}

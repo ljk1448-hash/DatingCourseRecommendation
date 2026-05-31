@@ -1,46 +1,23 @@
 {
   "meta": {
-    "note": "키 없이도 앱이 동작하도록 넣어둔 시드(샘플) 데이터입니다. 실제 장소는 npm run collect 로 네이버/카카오 API에서 채울 수 있습니다.",
-    "regions": ["서울 성수", "서울 연남·홍대", "대전 둔산·유성"],
+    "note": "npm run collect 로 카카오/네이버에서 수집한 실데이터로 채워집니다. places 가 비어 있으면 collect 를 실행하세요.",
+    "regions": [
+      "서울 성수",
+      "서울 연남·홍대",
+      "서울 강남·신사",
+      "서울 잠실·송파",
+      "서울 이태원·한남",
+      "서울 종로·익선동",
+      "서울 여의도",
+      "서울 망원·합정",
+      "서울 건대입구",
+      "대전 서구(둔산)",
+      "대전 유성구",
+      "대전 중구(은행·대흥)",
+      "대전 동구(소제·대전역)",
+      "대전 대덕구"
+    ],
     "categories": ["meal", "cafe", "dessert", "bar", "activity", "culture", "walk", "nightview"]
   },
-  "places": [
-    { "id": "ss-seoulforest", "name": "서울숲", "region": "서울 성수", "category": "walk", "lat": 37.5443, "lng": 127.0374, "tags": ["산책", "분위기좋은", "조용한", "사진맛집"], "priceLevel": 0, "avgMinutes": 60, "address": "서울 성동구 뚝섬로 273", "description": "넓은 숲길과 호수가 있어 천천히 걷기 좋은 도심 공원." },
-    { "id": "ss-bakery", "name": "성수 베이커리 카페", "region": "서울 성수", "category": "cafe", "lat": 37.5447, "lng": 127.0556, "tags": ["카페", "분위기좋은", "사진맛집", "데이트분위기"], "priceLevel": 2, "avgMinutes": 50, "address": "서울 성동구 성수동", "description": "갓 구운 빵과 통창 햇살이 인상적인 감성 베이커리 카페." },
-    { "id": "ss-burger", "name": "성수 수제버거", "region": "서울 성수", "category": "meal", "lat": 37.544, "lng": 127.056, "tags": ["맛집", "활기찬", "가성비"], "priceLevel": 2, "avgMinutes": 60, "address": "서울 성동구 성수동", "description": "두툼한 패티가 매력인 인기 수제버거집." },
-    { "id": "ss-gallery", "name": "성수 갤러리 전시", "region": "서울 성수", "category": "culture", "lat": 37.546, "lng": 127.044, "tags": ["전시/문화", "분위기좋은", "조용한", "사진맛집"], "priceLevel": 2, "avgMinutes": 70, "address": "서울 성동구 성수동", "description": "기획 전시가 자주 바뀌는 복합 문화 공간." },
-    { "id": "ss-rooftop", "name": "성수 루프탑 바", "region": "서울 성수", "category": "bar", "lat": 37.545, "lng": 127.057, "tags": ["야경", "데이트분위기", "분위기좋은"], "priceLevel": 3, "avgMinutes": 80, "address": "서울 성동구 성수동", "description": "도심 야경을 보며 한잔하기 좋은 루프탑." },
-    { "id": "ss-pasta", "name": "성수 파스타 다이닝", "region": "서울 성수", "category": "meal", "lat": 37.5448, "lng": 127.0548, "tags": ["맛집", "데이트분위기", "분위기좋은"], "priceLevel": 3, "avgMinutes": 80, "address": "서울 성동구 성수동", "description": "차분한 분위기에서 즐기는 이탈리안 다이닝." },
-    { "id": "ss-dessert", "name": "성수 디저트 카페", "region": "서울 성수", "category": "dessert", "lat": 37.5455, "lng": 127.0552, "tags": ["카페", "사진맛집", "데이트분위기"], "priceLevel": 2, "avgMinutes": 45, "address": "서울 성동구 성수동", "description": "예쁜 케이크와 시즌 디저트가 많은 카페." },
-    { "id": "ss-pottery", "name": "성수 도자기 원데이클래스", "region": "서울 성수", "category": "activity", "lat": 37.5462, "lng": 127.0565, "tags": ["액티비티", "데이트분위기", "조용한"], "priceLevel": 2, "avgMinutes": 90, "address": "서울 성동구 성수동", "description": "둘이 함께 컵을 빚어보는 원데이 공방 체험." },
-    { "id": "ss-ttukseom", "name": "뚝섬 한강공원", "region": "서울 성수", "category": "nightview", "lat": 37.53, "lng": 127.067, "tags": ["야경", "산책", "활기찬", "데이트분위기"], "priceLevel": 0, "avgMinutes": 70, "address": "서울 광진구 자양동", "description": "강바람 맞으며 야경 보기 좋은 한강공원." },
-    { "id": "ss-brunch", "name": "성수 브런치 카페", "region": "서울 성수", "category": "meal", "lat": 37.5435, "lng": 127.0545, "tags": ["맛집", "카페", "분위기좋은", "가성비"], "priceLevel": 2, "avgMinutes": 60, "address": "서울 성동구 성수동", "description": "느긋한 브런치를 즐기기 좋은 밝은 분위기의 가게." },
-    { "id": "ss-cafe2", "name": "성수 감성 카페", "region": "서울 성수", "category": "cafe", "lat": 37.547, "lng": 127.053, "tags": ["카페", "조용한", "분위기좋은"], "priceLevel": 2, "avgMinutes": 50, "address": "서울 성동구 성수동", "description": "오래된 공장을 개조한 인더스트리얼 감성 카페." },
-    { "id": "ss-understand", "name": "언더스탠드에비뉴", "region": "서울 성수", "category": "activity", "lat": 37.5475, "lng": 127.043, "tags": ["액티비티", "전시/문화", "활기찬", "사진맛집"], "priceLevel": 1, "avgMinutes": 60, "address": "서울 성동구 왕십리로 63", "description": "컨테이너 상점과 체험거리가 모인 복합 공간." },
-
-    { "id": "yn-yeontral", "name": "연트럴파크(경의선숲길)", "region": "서울 연남·홍대", "category": "walk", "lat": 37.5605, "lng": 126.9255, "tags": ["산책", "분위기좋은", "활기찬", "데이트분위기"], "priceLevel": 0, "avgMinutes": 50, "address": "서울 마포구 연남동", "description": "철길을 따라 길게 이어진 도심 산책길." },
-    { "id": "yn-pizza", "name": "연남 화덕피자", "region": "서울 연남·홍대", "category": "meal", "lat": 37.562, "lng": 126.925, "tags": ["맛집", "데이트분위기", "활기찬"], "priceLevel": 2, "avgMinutes": 70, "address": "서울 마포구 연남동", "description": "화덕에서 구운 정통 나폴리 피자집." },
-    { "id": "yn-cafe", "name": "연남 감성 카페", "region": "서울 연남·홍대", "category": "cafe", "lat": 37.5618, "lng": 126.924, "tags": ["카페", "분위기좋은", "사진맛집", "조용한"], "priceLevel": 2, "avgMinutes": 50, "address": "서울 마포구 연남동", "description": "작은 정원이 있는 아늑한 분위기의 카페." },
-    { "id": "yn-escape", "name": "홍대 방탈출 카페", "region": "서울 연남·홍대", "category": "activity", "lat": 37.555, "lng": 126.923, "tags": ["액티비티", "활기찬"], "priceLevel": 2, "avgMinutes": 80, "address": "서울 마포구 서교동", "description": "둘이 협력해 풀어가는 인기 방탈출 테마." },
-    { "id": "yn-live", "name": "홍대 라이브 공연장", "region": "서울 연남·홍대", "category": "culture", "lat": 37.554, "lng": 126.922, "tags": ["전시/문화", "활기찬", "데이트분위기"], "priceLevel": 2, "avgMinutes": 90, "address": "서울 마포구 서교동", "description": "인디 밴드 라이브를 즐길 수 있는 공연 클럽." },
-    { "id": "yn-pho", "name": "연남 쌀국수", "region": "서울 연남·홍대", "category": "meal", "lat": 37.5625, "lng": 126.926, "tags": ["맛집", "가성비", "활기찬"], "priceLevel": 1, "avgMinutes": 50, "address": "서울 마포구 연남동", "description": "진한 육수가 일품인 베트남 쌀국수집." },
-    { "id": "yn-dessert", "name": "연남 디저트 카페", "region": "서울 연남·홍대", "category": "dessert", "lat": 37.5615, "lng": 126.9248, "tags": ["카페", "사진맛집", "데이트분위기"], "priceLevel": 2, "avgMinutes": 45, "address": "서울 마포구 연남동", "description": "수제 디저트와 차가 잘 어울리는 카페." },
-    { "id": "yn-board", "name": "홍대 보드게임 카페", "region": "서울 연남·홍대", "category": "activity", "lat": 37.5545, "lng": 126.9225, "tags": ["액티비티", "활기찬", "가성비"], "priceLevel": 1, "avgMinutes": 90, "address": "서울 마포구 서교동", "description": "수백 종 보드게임을 즐길 수 있는 카페." },
-    { "id": "yn-izakaya", "name": "연남 이자카야", "region": "서울 연남·홍대", "category": "bar", "lat": 37.5622, "lng": 126.9258, "tags": ["데이트분위기", "분위기좋은", "활기찬"], "priceLevel": 2, "avgMinutes": 80, "address": "서울 마포구 연남동", "description": "안주와 사케가 좋은 아늑한 이자카야." },
-    { "id": "yn-mangwon", "name": "망원 한강공원", "region": "서울 연남·홍대", "category": "nightview", "lat": 37.552, "lng": 126.896, "tags": ["야경", "산책", "데이트분위기", "조용한"], "priceLevel": 0, "avgMinutes": 70, "address": "서울 마포구 마포나루길", "description": "노을과 야경이 예쁜 한강공원, 돗자리 데이트 명소." },
-    { "id": "yn-brunch", "name": "연남 브런치 맛집", "region": "서울 연남·홍대", "category": "meal", "lat": 37.5612, "lng": 126.9252, "tags": ["맛집", "분위기좋은", "가성비"], "priceLevel": 2, "avgMinutes": 60, "address": "서울 마포구 연남동", "description": "든든한 브런치 플레이트로 유명한 곳." },
-
-    { "id": "dj-arboretum", "name": "한밭수목원", "region": "대전 둔산·유성", "category": "walk", "lat": 36.3676, "lng": 127.3886, "tags": ["산책", "조용한", "분위기좋은", "가성비"], "priceLevel": 0, "avgMinutes": 70, "address": "대전 서구 둔산대로 169", "description": "도심 속 넓은 무료 수목원, 사계절 산책 코스." },
-    { "id": "dj-arthall", "name": "대전예술의전당", "region": "대전 둔산·유성", "category": "culture", "lat": 36.3672, "lng": 127.388, "tags": ["전시/문화", "분위기좋은", "데이트분위기"], "priceLevel": 2, "avgMinutes": 100, "address": "대전 서구 둔산대로 135", "description": "공연과 전시가 열리는 대전의 대표 문화공간." },
-    { "id": "dj-pasta", "name": "둔산 파스타 다이닝", "region": "대전 둔산·유성", "category": "meal", "lat": 36.352, "lng": 127.378, "tags": ["맛집", "데이트분위기", "분위기좋은"], "priceLevel": 2, "avgMinutes": 70, "address": "대전 서구 둔산동", "description": "차분한 분위기의 이탈리안 레스토랑." },
-    { "id": "dj-cafe", "name": "둔산 감성 카페", "region": "대전 둔산·유성", "category": "cafe", "lat": 36.353, "lng": 127.379, "tags": ["카페", "분위기좋은", "사진맛집", "조용한"], "priceLevel": 2, "avgMinutes": 50, "address": "대전 서구 둔산동", "description": "넓고 조용해 대화 나누기 좋은 카페." },
-    { "id": "dj-expo", "name": "엑스포과학공원·한빛탑", "region": "대전 둔산·유성", "category": "nightview", "lat": 36.3745, "lng": 127.3895, "tags": ["야경", "액티비티", "활기찬", "사진맛집"], "priceLevel": 1, "avgMinutes": 80, "address": "대전 유성구 대덕대로 480", "description": "한빛탑 전망과 분수가 있는 야경 명소." },
-    { "id": "dj-footbath", "name": "유성온천 족욕체험", "region": "대전 둔산·유성", "category": "activity", "lat": 36.354, "lng": 127.341, "tags": ["액티비티", "조용한", "가성비"], "priceLevel": 0, "avgMinutes": 40, "address": "대전 유성구 봉명동", "description": "무료 야외 족욕장에서 발 담그며 쉬어가기." },
-    { "id": "dj-bbq", "name": "둔산 고깃집", "region": "대전 둔산·유성", "category": "meal", "lat": 36.3515, "lng": 127.3795, "tags": ["맛집", "활기찬", "가성비"], "priceLevel": 2, "avgMinutes": 80, "address": "대전 서구 둔산동", "description": "숯불에 굽는 한우/삼겹살 인기 맛집." },
-    { "id": "dj-artmuseum", "name": "대전시립미술관", "region": "대전 둔산·유성", "category": "culture", "lat": 36.3668, "lng": 127.387, "tags": ["전시/문화", "조용한", "분위기좋은"], "priceLevel": 1, "avgMinutes": 70, "address": "대전 서구 둔산대로 155", "description": "기획 전시가 알찬 시립 미술관." },
-    { "id": "dj-dessert", "name": "둔산 디저트 카페", "region": "대전 둔산·유성", "category": "dessert", "lat": 36.3525, "lng": 127.3785, "tags": ["카페", "사진맛집", "데이트분위기"], "priceLevel": 2, "avgMinutes": 45, "address": "대전 서구 둔산동", "description": "시그니처 케이크가 유명한 디저트 카페." },
-    { "id": "dj-gapcheon", "name": "갑천 산책로", "region": "대전 둔산·유성", "category": "walk", "lat": 36.36, "lng": 127.37, "tags": ["산책", "조용한", "데이트분위기"], "priceLevel": 0, "avgMinutes": 50, "address": "대전 서구 갑천변", "description": "강을 따라 이어지는 한적한 산책·자전거길." },
-    { "id": "dj-brunch", "name": "유성 브런치 카페", "region": "대전 둔산·유성", "category": "meal", "lat": 36.3545, "lng": 127.342, "tags": ["맛집", "카페", "분위기좋은", "가성비"], "priceLevel": 2, "avgMinutes": 60, "address": "대전 유성구 봉명동", "description": "여유로운 브런치를 즐기기 좋은 카페형 식당." },
-    { "id": "dj-skyroad", "name": "으능정이 스카이로드", "region": "대전 둔산·유성", "category": "nightview", "lat": 36.329, "lng": 127.427, "tags": ["야경", "활기찬", "사진맛집"], "priceLevel": 0, "avgMinutes": 50, "address": "대전 중구 중앙로", "description": "대형 LED 천장 영상이 있는 번화가 야경 거리." }
-  ]
+  "places": []
 }

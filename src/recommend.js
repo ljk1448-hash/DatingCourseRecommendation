@@ -3,7 +3,7 @@
 // - "거리 예산(km)"을 조절 knob 으로 삼아 동선을 구성한다.
 // - 외부 지도/LLM API 없이도 완결적으로 동작하며, 나중에 실거리/LLM 으로 교체 가능.
 
-import { travelKm, walkMinutes } from "./geo.js";
+import { travelKm, walkMinutes, driveMinutes } from "./geo.js";
 
 // 카테고리별 코스 내 순서(phase). 작을수록 앞 단계.
 const PHASE = {
@@ -55,22 +55,24 @@ export function getTagVocabulary(places) {
 }
 
 /** 원하는 태그와의 일치 점수 */
-function matchScore(place, desiredTags) {
+function matchScore(place, desiredTags, budget = "normal") {
   const tags = place.tags || [];
   let score = 0.5; // 기본 점수(태그가 안 맞아도 동선 채우기용으로 선택 가능)
   for (const t of tags) if (desiredTags.includes(t)) score += 2;
+  if (budget === "value" && tags.includes("가성비")) score += 1.2;
+  if (budget === "premium" && tags.some((t) => t === "데이트분위기" || t === "분위기좋은")) score += 1.2;
   return score;
 }
 
 /** 한 코스를 greedy 로 구성 */
-function buildCourse(candidates, { desiredTags, budgetKm, stops, includeNight, seedIndex }) {
+function buildCourse(candidates, { desiredTags, budgetKm, stops, includeNight, seedIndex, mode = "walk", budget = "normal" }) {
   const caps = categoryCaps(stops);
   const W_MATCH = 2;
-  const W_DIST = 1.5;
+  const W_DIST = mode === "car" ? 0.2 : 1.5;
 
   let pool = candidates
     .filter((p) => (includeNight ? true : !["nightview", "bar"].includes(p.category)))
-    .map((p) => ({ ...p, _score: matchScore(p, desiredTags) }));
+    .map((p) => ({ ...p, _score: matchScore(p, desiredTags, budget) }));
 
   if (pool.length === 0) return null;
 
@@ -110,11 +112,11 @@ function buildCourse(candidates, { desiredTags, budgetKm, stops, includeNight, s
     totalKm += bestKm;
   }
 
-  return orderAndSummarize(chosen, desiredTags);
+  return orderAndSummarize(chosen, desiredTags, mode);
 }
 
 /** 선택된 장소들을 자연스러운 흐름(phase)으로 재정렬하고 코스 정보 생성 */
-function orderAndSummarize(places, desiredTags) {
+function orderAndSummarize(places, desiredTags, mode = "walk") {
   const ordered = [...places].sort(
     (a, b) => (PHASE[a.category] ?? 9) - (PHASE[b.category] ?? 9)
   );
@@ -130,7 +132,7 @@ function orderAndSummarize(places, desiredTags) {
     let legMin = 0;
     if (i > 0) {
       legKm = +travelKm(ordered[i - 1], p).toFixed(2);
-      legMin = walkMinutes(legKm);
+      legMin = mode === "car" ? driveMinutes(legKm) : walkMinutes(legKm);
       totalKm += legKm;
       totalMin += legMin;
     }
@@ -140,6 +142,7 @@ function orderAndSummarize(places, desiredTags) {
     stops.push({
       id: p.id,
       name: p.name,
+      region: p.region,
       category: p.category,
       categoryLabel: CATEGORY_LABEL[p.category] || p.category,
       lat: p.lat,
@@ -148,6 +151,7 @@ function orderAndSummarize(places, desiredTags) {
       address: p.address,
       description: p.description,
       avgMinutes: p.avgMinutes,
+      blog: p.blog || null,
       legKm,
       legMin,
     });
@@ -165,6 +169,7 @@ function orderAndSummarize(places, desiredTags) {
     totalMinutes: totalMin,
     tagsMatched: matched,
     vibe,
+    mode,
   };
 }
 
@@ -207,27 +212,43 @@ function signature(course) {
 export function recommendCourses({
   places,
   region,
+  regions,
   tags = [],
   distanceKm = 5,
   stops = 4,
   includeNight = true,
+  mode = "walk",
+  budget = "normal",
+  excludeCategories = [],
+  excludeKeys = [],
   count = 3,
 }) {
-  const candidates = places.filter((p) => !region || p.region === region);
+  const allow = regions && regions.length ? new Set(regions) : (region ? new Set([region]) : null);
+  const exCats = new Set(excludeCategories || []);
+  const exKeys = new Set(excludeKeys || []);
+  const candidates = places.filter(
+    (p) =>
+      (!allow || allow.has(p.region)) &&
+      !exCats.has(p.category) &&
+      !exKeys.has(`${p.name}|${p.region}`)
+  );
   if (candidates.length === 0) {
     return { region, courses: [], message: "해당 지역에 등록된 장소가 없어요." };
   }
 
+  const budgetKm = mode === "car" ? Infinity : distanceKm;
   const courses = [];
   const seen = new Set();
   // 시작점을 바꿔가며 서로 다른 코스를 만든다
   for (let seed = 0; seed < candidates.length && courses.length < count; seed++) {
     const course = buildCourse(candidates, {
       desiredTags: tags,
-      budgetKm: distanceKm,
+      budgetKm,
       stops,
       includeNight,
       seedIndex: seed,
+      mode,
+      budget,
     });
     if (!course || course.stops.length < 2) continue;
     const sig = signature(course);
@@ -243,7 +264,7 @@ export function recommendCourses({
 
   return {
     region,
-    requested: { tags, distanceKm, stops, includeNight },
+    requested: { tags, distanceKm, stops, includeNight, mode, budget },
     courses,
     message: courses.length ? null : "조건에 맞는 코스를 찾지 못했어요. 거리를 늘리거나 특성을 줄여보세요.",
   };

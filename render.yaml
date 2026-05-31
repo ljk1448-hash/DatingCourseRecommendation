@@ -18,7 +18,9 @@ services:
         value: "date"
       - key: APP_PASSWORD
         sync: false
-      # 아래 키들은 선택. Render 대시보드에서 값을 채우면 됩니다(없어도 시드 데이터로 동작).
+      # 전국 라이브 검색을 쓰려면 KAKAO_REST_API_KEY 가 필요합니다(없으면 장소를 못 가져옴).
+      # NAVER 키는 블로그 후기/감성태그용(선택), LLM 키는 AI 멘트용(선택).
+      # Render 대시보드 > Environment 에서 값을 채우세요.
       - key: KAKAO_REST_API_KEY
         sync: false
       - key: KAKAO_JS_KEY

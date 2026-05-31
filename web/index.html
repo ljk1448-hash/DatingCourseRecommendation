@@ -12,41 +12,77 @@
 </head>
 <body>
   <header class="app-header">
+    <button id="savedBtn" class="icon-btn" type="button" data-action="open-saved">♥ <span id="savedCount">0</span></button>
     <h1>오늘 우리, 어디 갈까?</h1>
     <p class="sub">지역과 분위기를 고르면 데이트 코스를 짜드려요</p>
   </header>
 
   <main>
-    <!-- 1. 지역 -->
     <section class="card">
-      <h2><span class="step">1</span> 지역</h2>
-      <div id="regions" class="chips"></div>
+      <h2><span class="step">1</span> 지역 <button id="locBtn" type="button" class="mini-btn">📍 현재 위치</button></h2>
+      <div id="sido" class="chips"></div>
+      <div id="districts" class="chips scroll"></div>
     </section>
 
-    <!-- 2. 특성 -->
     <section class="card">
       <h2><span class="step">2</span> 원하는 분위기 <small>(여러 개 선택)</small></h2>
       <div id="tags" class="chips"></div>
     </section>
 
-    <!-- 3. 옵션 -->
     <section class="card">
       <h2><span class="step">3</span> 동선 설정</h2>
 
       <div class="field">
-        <label for="distance">이동 거리 조절 <span id="distanceLabel" class="pill">보통 · 약 5km</span></label>
-        <input type="range" id="distance" min="1" max="20" step="1" value="5" />
-        <div class="range-hint"><span>가깝게 (도보 위주)</span><span>넓게 (차로 이동)</span></div>
+        <label>이동 수단</label>
+        <div id="transport" class="segmented">
+          <button type="button" class="seg selected" data-mode="walk">🚶 도보</button>
+          <button type="button" class="seg" data-mode="car">🚗 차량</button>
+        </div>
       </div>
 
       <div class="field">
-        <label for="stops">코스 정거장 수 <span id="stopsLabel" class="pill">4곳</span></label>
+        <label>예산 <small>(검색 성향 기반 근사)</small></label>
+        <div id="budget" class="segmented">
+          <button type="button" class="seg" data-budget="value">가성비</button>
+          <button type="button" class="seg selected" data-budget="normal">보통</button>
+          <button type="button" class="seg" data-budget="premium">프리미엄</button>
+        </div>
+      </div>
+
+      <div class="field" id="distanceField">
+        <label for="distance">이동 거리 조절 <span id="distanceLabel" class="pill">보통 · 약 5km</span></label>
+        <input type="range" id="distance" min="1" max="20" step="1" value="5" />
+        <div class="range-hint"><span>가깝게</span><span>멀리까지</span></div>
+      </div>
+
+      <div class="field">
+        <label for="stops">코스 장소 수 <span id="stopsLabel" class="pill">4곳</span></label>
         <input type="range" id="stops" min="2" max="5" step="1" value="4" />
       </div>
 
       <div class="field toggle-row">
         <label for="includeNight">야경 · 술 한잔 포함</label>
         <label class="switch"><input type="checkbox" id="includeNight" checked /><span class="slider"></span></label>
+      </div>
+
+      <div class="field toggle-row">
+        <label for="nearby">근교 지역까지 허용</label>
+        <label class="switch"><input type="checkbox" id="nearby" /><span class="slider"></span></label>
+      </div>
+
+      <div class="field toggle-row">
+        <label for="openNow">지금 시간대 맞춤</label>
+        <label class="switch"><input type="checkbox" id="openNow" /><span class="slider"></span></label>
+      </div>
+
+      <div class="field toggle-row">
+        <label for="weather">비 오면 실내 위주</label>
+        <label class="switch"><input type="checkbox" id="weather" /><span class="slider"></span></label>
+      </div>
+
+      <div class="field toggle-row">
+        <label for="excludeVisited">가본 곳 제외</label>
+        <label class="switch"><input type="checkbox" id="excludeVisited" /><span class="slider"></span></label>
       </div>
 
       <div class="field toggle-row" id="llmRow" hidden>
@@ -59,9 +95,26 @@
   </main>
 
   <div class="cta-bar">
+    <button id="randomBtn" class="btn-secondary" type="button" title="아무거나">🎲</button>
     <button id="recommendBtn">💕 코스 추천받기</button>
   </div>
 
-  <script src="app.js"></script>
+  <!-- 저장한 코스 -->
+  <div id="savedPanel" class="overlay" hidden>
+    <div class="sheet">
+      <div class="sheet-head"><b>저장한 코스</b><button class="x" type="button" data-action="close-saved">✕</button></div>
+      <div id="savedList"></div>
+    </div>
+  </div>
+
+  <!-- 코스 지도 -->
+  <div id="mapModal" class="overlay" hidden>
+    <div class="sheet">
+      <div class="sheet-head"><b id="mapTitle">코스 지도</b><button class="x" type="button" data-action="close-map">✕</button></div>
+      <div id="mapContainer" class="map-box"></div>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
 </body>
 </html>

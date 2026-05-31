@@ -191,3 +191,127 @@ input[type="range"]::-moz-range-thumb {
 }
 .loading .heart { font-size: 30px; animation: beat 0.9s ease-in-out infinite; }
 @keyframes beat { 0%,100% { transform: scale(1); } 50% { transform: scale(1.25); } }
+
+.stop-blog {
+  font-size: 12px;
+  color: #8a6b75;
+  background: #faf2f5;
+  border-radius: 8px;
+  padding: 6px 9px;
+  margin-top: 6px;
+  line-height: 1.45;
+}
+.stop-blog a { color: var(--rose-deep); white-space: nowrap; }
+
+#districts.scroll { max-height: 196px; overflow-y: auto; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
+#districts .chip { font-size: 13px; padding: 7px 12px; }
+
+.segmented { display: flex; gap: 8px; }
+.seg {
+  flex: 1; padding: 11px; border: 1.5px solid var(--line); background: #fff;
+  border-radius: 12px; font-size: 14px; font-weight: 600; color: var(--ink); cursor: pointer;
+  transition: all 0.15s ease;
+}
+.seg:active { transform: scale(0.98); }
+.seg.selected { background: var(--rose-soft); border-color: var(--rose); color: var(--rose-deep); }
+
+.stop-region { color: var(--muted); font-weight: 600; }
+
+/* 헤더 저장함 버튼 */
+.app-header { position: relative; }
+.icon-btn {
+  position: absolute; top: calc(env(safe-area-inset-top) + 18px); right: 16px;
+  background: rgba(255,255,255,0.22); color: #fff; border: none;
+  padding: 7px 12px; border-radius: 999px; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.icon-btn:active { transform: scale(0.96); }
+
+/* 코스 액션 (지도/저장) */
+.course-actions { display: flex; gap: 8px; margin-top: 14px; }
+.btn-soft {
+  flex: 1; padding: 11px; border: 1.5px solid var(--line); background: #fff;
+  border-radius: 12px; font-size: 14px; font-weight: 700; color: var(--ink); cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-soft:active { transform: scale(0.98); }
+.btn-save.on { background: var(--rose-soft); border-color: var(--rose); color: var(--rose-deep); }
+
+/* 정거장 길찾기 링크 */
+.stop-go {
+  font-size: 11.5px; color: var(--rose-deep); text-decoration: none; margin-left: 8px;
+  border: 1px solid var(--rose-soft); padding: 1px 7px; border-radius: 999px; white-space: nowrap;
+}
+
+/* 시트/모달 공통 */
+.overlay {
+  position: fixed; inset: 0; background: rgba(40,30,40,0.45);
+  display: flex; align-items: flex-end; justify-content: center; z-index: 50;
+}
+.sheet {
+  background: var(--bg); width: 100%; max-width: 560px; max-height: 86vh;
+  border-radius: 22px 22px 0 0; padding: 16px 14px calc(env(safe-area-inset-bottom) + 16px);
+  overflow-y: auto; box-shadow: 0 -8px 30px rgba(0,0,0,0.2);
+}
+.sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-size: 16px; }
+.sheet-head .x { background: none; border: none; font-size: 18px; color: var(--muted); cursor: pointer; padding: 4px 8px; }
+.map-box { width: 100%; height: 62vh; border-radius: 14px; overflow: hidden; background: #eee; }
+.map-fallback { font-size: 13.5px; line-height: 1.6; color: var(--ink); }
+.map-fallback ol { padding-left: 18px; }
+.map-fallback a { color: var(--rose-deep); }
+.map-pin {
+  background: var(--rose); color: #fff; width: 24px; height: 24px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 13px; font-weight: 800; border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+/* 정거장 다녀옴 버튼 */
+.stop-visit {
+  font-size: 11px; margin-left: 6px; padding: 1px 8px; border-radius: 999px;
+  border: 1px solid var(--line); background: #fff; color: var(--muted); cursor: pointer;
+}
+.stop-visit.on { background: #efe9ec; border-color: var(--muted); color: var(--ink); font-weight: 700; }
+
+/* 날씨 배지 */
+.wx { font-size: 12px; font-weight: 700; color: var(--rose-deep); margin-left: 4px; }
+
+/* 저장 시트 - 가본 곳 섹션 */
+.saved-section { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); }
+.visited-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.link-btn { background: none; border: none; color: var(--rose-deep); font-size: 12.5px; cursor: pointer; }
+.visited-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 2px; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+.visited-row small { color: var(--muted); }
+.visited-row .x { background: none; border: none; color: var(--muted); font-size: 15px; cursor: pointer; }
+
+.stop-review {
+  font-size: 11.5px; color: #03c75a; text-decoration: none; margin-left: 6px;
+  border: 1px solid #cdeedd; padding: 1px 7px; border-radius: 999px; white-space: nowrap;
+}
+
+/* 장소 대표 사진(썸네일) */
+.stop-thumb { float: right; width: 66px; height: 66px; margin: 0 0 6px 10px; border-radius: 10px; overflow: hidden; display: block; background: #f0e2e7; }
+.stop-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.stop-body::after { content: ""; display: block; clear: both; }
+
+/* 전화 버튼 */
+.stop-call { font-size: 11.5px; color: #1f8a4c; text-decoration: none; margin-left: 6px; border: 1px solid #cdeedd; padding: 1px 7px; border-radius: 999px; white-space: nowrap; }
+
+/* 지역 헤더 현재위치 버튼 */
+.mini-btn { margin-left: auto; background: var(--rose-soft); color: var(--rose-deep); border: none; font-size: 12px; font-weight: 700; padding: 5px 11px; border-radius: 999px; cursor: pointer; }
+.mini-btn:disabled { opacity: 0.6; }
+
+/* CTA 바: 랜덤 + 추천 */
+.cta-bar { display: flex; gap: 8px; justify-content: center; align-items: stretch; }
+.cta-bar #recommendBtn { width: auto; flex: 1 1 auto; max-width: 496px; margin: 0; }
+.btn-secondary { flex: 0 0 56px; background: #fff; color: var(--rose-deep); border: 1.5px solid var(--rose); border-radius: 16px; font-size: 20px; cursor: pointer; }
+.btn-secondary:active { transform: scale(0.97); }
+
+/* 코스 액션 4개 → 2열 줄바꿈 */
+.course-actions { flex-wrap: wrap; }
+.course-actions .btn-soft { flex: 1 1 44%; }
+
+/* 장소 찜 / 바꾸기 버튼 */
+.stop-wish, .stop-swap {
+  font-size: 11px; margin-left: 6px; padding: 1px 8px; border-radius: 999px;
+  border: 1px solid var(--line); background: #fff; color: var(--muted); cursor: pointer;
+}
+.stop-wish.on { background: #fff4d6; border-color: #e8c95a; color: #8a6d12; font-weight: 700; }

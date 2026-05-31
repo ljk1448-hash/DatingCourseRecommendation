@@ -61,3 +61,15 @@ git add .
 git commit -m "수정 내용"
 git push
 ```
+
+## 전국 라이브 검색 (서버 키 등록)
+
+앱이 전국 시·군·구를 실시간으로 검색하려면, 배포된 서버(Render)에 API 키가 있어야 합니다.
+Render 대시보드 → 서비스 → **Environment** 에서 아래를 추가하고 저장하면 자동 재배포됩니다.
+
+- `KAKAO_REST_API_KEY` — 필수. 없으면 장소를 가져오지 못해요. (카카오맵 활성화된 앱의 REST 키)
+- `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET` — 선택. 코스에 블로그 후기/감성 태그를 붙여줍니다.
+- `LLM_API_KEY` — 선택. AI 추천 멘트.
+
+키를 넣으면 미리 수집(`npm run collect`)할 필요 없이, 지역을 고를 때마다 그 동네를 즉석 검색해 코스를 만들어요.
+(같은 지역 재요청은 6시간 캐시되어 빠릅니다.)
