@@ -296,6 +296,7 @@ app.post("/api/recommend", async function (req, res) {
       distanceKm: Number(distanceKm), stops: Number(stops),
       includeNight: !!includeNight, mode, budget,
       excludeCategories: [...excludeCategories], excludeKeys,
+      seedOffset: Number.isInteger(body.seed) ? body.seed : 0,
       count: 3,
     });
     if (weather) result.weather = weather;

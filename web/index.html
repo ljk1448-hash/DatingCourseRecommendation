@@ -17,7 +17,14 @@
     <p class="sub">지역과 분위기를 고르면 데이트 코스를 짜드려요</p>
   </header>
 
+  <div id="resultsBar" class="results-bar" hidden>
+    <button type="button" class="rb-btn" data-action="back-settings">← 조건 바꾸기</button>
+    <b>추천 결과</b>
+    <button type="button" class="rb-btn rb-primary" data-action="redo">🔄 다시 추천</button>
+  </div>
+
   <main>
+    <div id="settingsView">
     <section class="card">
       <h2><span class="step">1</span> 지역 <button id="locBtn" type="button" class="mini-btn">📍 현재 위치</button></h2>
       <div id="sido" class="chips"></div>
@@ -91,6 +98,7 @@
       </div>
     </section>
 
+    </div>
     <div id="results"></div>
   </main>
 

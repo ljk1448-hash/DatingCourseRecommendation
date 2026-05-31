@@ -86,6 +86,21 @@ async function init() {
   updateSavedCount();
 }
 
+function enterResults() {
+  $("#settingsView").hidden = true;
+  document.querySelector(".cta-bar").hidden = true;
+  $("#resultsBar").hidden = false;
+  document.body.classList.add("results-mode");
+  window.scrollTo({ top: 0 });
+}
+function enterSettings() {
+  $("#settingsView").hidden = false;
+  document.querySelector(".cta-bar").hidden = false;
+  $("#resultsBar").hidden = true;
+  document.body.classList.remove("results-mode");
+  window.scrollTo({ top: 0 });
+}
+
 function renderSido(sidoList, selSido, selDistricts) {
   const box = $("#sido");
   box.innerHTML = "";
@@ -227,6 +242,7 @@ async function recommend() {
   const btn = $("#recommendBtn");
   const results = $("#results");
   if (!state.regions || state.regions.size === 0) { alert("지역을 한 곳 이상 골라주세요."); return; }
+  enterResults();
   btn.disabled = true;
   results.innerHTML = `<div class="loading"><div class="heart">💗</div>지역을 검색해 코스를 짜는 중...</div>`;
   results.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -246,6 +262,7 @@ async function recommend() {
     openNow: $("#openNow").checked,
     hour: new Date().getHours(),
     weather: $("#weather").checked,
+    seed: Math.floor(Math.random() * 100000),
     excludePlaces,
     useLlm: state.meta?.llm ? $("#useLlm").checked : false,
   };
@@ -438,6 +455,8 @@ function onAction(e) {
   if (a === "wish") return toggleWish(el);
   if (a === "unwish") return unwish(el.dataset.key);
   if (a === "clear-wish") return clearWish();
+  if (a === "back-settings") return enterSettings();
+  if (a === "redo") return recommend();
 }
 
 async function toggleVisit(el) {

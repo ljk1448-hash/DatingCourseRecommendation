@@ -221,6 +221,7 @@ export function recommendCourses({
   budget = "normal",
   excludeCategories = [],
   excludeKeys = [],
+  seedOffset = 0,
   count = 3,
 }) {
   const allow = regions && regions.length ? new Set(regions) : (region ? new Set([region]) : null);
@@ -240,7 +241,8 @@ export function recommendCourses({
   const courses = [];
   const seen = new Set();
   // 시작점을 바꿔가며 서로 다른 코스를 만든다
-  for (let seed = 0; seed < candidates.length && courses.length < count; seed++) {
+  for (let k = 0; k < candidates.length && courses.length < count; k++) {
+    const seed = (k + Math.floor(seedOffset)) % candidates.length;
     const course = buildCourse(candidates, {
       desiredTags: tags,
       budgetKm,

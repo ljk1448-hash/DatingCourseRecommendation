@@ -322,3 +322,16 @@ input[type="range"]::-moz-range-thumb {
 /* 전체 선택 칩 */
 .chip-all { font-weight: 700; border-style: dashed; }
 .chip-all.selected { background: var(--rose); border-color: var(--rose); color: #fff; border-style: solid; }
+
+/* 결과 화면 상단 바 */
+.results-bar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 40;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: calc(env(safe-area-inset-top) + 10px) 14px 10px;
+  background: var(--rose); color: #fff; box-shadow: 0 2px 12px rgba(226, 62, 99, 0.3);
+}
+.results-bar b { font-size: 15px; }
+.rb-btn { background: rgba(255,255,255,0.22); color: #fff; border: none; padding: 8px 12px; border-radius: 999px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.rb-btn:active { transform: scale(0.97); }
+.rb-primary { background: #fff; color: var(--rose-deep); }
+body.results-mode main { padding-top: 62px; }
