@@ -230,6 +230,8 @@ function hash(s) { return createHash("sha256").update(String(s)).digest(); }
 function safeEqual(a, b) { return timingSafeEqual(hash(a), hash(b)); }
 if (AUTH_PASS) {
   app.use(function (req, res, next) {
+    // 공개 배포용(다운로드 페이지/APK/QR)은 비밀번호 없이 접근 허용 — PUBLIC_DOWNLOAD
+    if (/^\/(download\.html|download-qr\.png|app-release\.apk)$/.test(req.path)) return next();
     const header = req.headers.authorization || "";
     const match = header.match(/^Basic\s+(.+)$/i);
     if (match) {

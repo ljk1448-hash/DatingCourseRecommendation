@@ -52,6 +52,14 @@ npm run cap:sync          # 코드 변경분을 앱에 반영
 npm run cap:open:android  # Android Studio 열기
 ```
 
+### 심사 없이 지인에게 먼저 써보기 (베타)
+
+스토어 등록 전에, 휴대폰 종류를 자동 감지하는 **다운로드 페이지**로 지인에게 링크만 보내 먼저 써보게 할 수 있어요.
+안드로이드는 APK 직접 설치(무료·무계정), 아이폰은 Safari "홈 화면에 추가"(PWA). 방법은 **[SHARE.md](SHARE.md)** 참고.
+
+- 공유 주소: `https://date-course-recommender.onrender.com/download.html`
+- QR 이미지: `web/download-qr.png`
+
 ## 폴더 구조 (요약)
 
 ```
@@ -63,4 +71,6 @@ scripts/collect.js  (선택) 사전수집 배치
 capacitor.config.json  네이티브 패키징 설정
 resources/          앱 아이콘·스플래시 소스
 STORE.md            스토어 출시 가이드
+SHARE.md            무심사 베타 배포 가이드
+web/download.html   다운로드 랜딩 페이지
 ```

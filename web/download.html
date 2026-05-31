@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#ff5a7e" />
+  <title>오늘 우리, 어디 갈까? — 앱 받기</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <style>
+    :root{ --pink:#ff5a7e; --pink2:#ff8aa3; --cream:#fff6f8; --ink:#2b2b33; --muted:#8a8a96; }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+      background:var(--cream);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.55}
+    .wrap{max-width:460px;margin:0 auto;padding:32px 20px 56px}
+    .hero{text-align:center;margin-bottom:24px}
+    .app-icon{width:96px;height:96px;border-radius:24px;box-shadow:0 10px 30px rgba(255,90,126,.35);display:block;margin:0 auto 14px}
+    h1{font-size:22px;margin:0 0 6px}
+    .sub{color:var(--muted);font-size:14px;margin:0}
+    .card{background:#fff;border-radius:18px;padding:20px;box-shadow:0 4px 18px rgba(0,0,0,.06);margin-bottom:16px}
+    .card h2{font-size:16px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+    .badge{font-size:12px;font-weight:700;color:#fff;background:var(--pink);border-radius:999px;padding:3px 10px}
+    .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+      background:linear-gradient(135deg,var(--pink),var(--pink2));color:#fff;border:none;border-radius:14px;
+      padding:16px;font-size:16px;font-weight:700;text-decoration:none;cursor:pointer;box-shadow:0 6px 16px rgba(255,90,126,.35)}
+    .btn.ghost{background:#fff;color:var(--pink);border:1.5px solid var(--pink);box-shadow:none}
+    .steps{margin:12px 0 0;padding:0;list-style:none;counter-reset:s}
+    .steps li{counter-increment:s;position:relative;padding:8px 0 8px 34px;font-size:14px;color:#444}
+    .steps li::before{content:counter(s);position:absolute;left:0;top:7px;width:22px;height:22px;border-radius:50%;
+      background:var(--cream);color:var(--pink);font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center}
+    .hint{font-size:12.5px;color:var(--muted);margin-top:10px}
+    .qr{text-align:center}
+    .qr img{width:180px;height:180px;border-radius:12px;border:1px solid #ffe0e8}
+    .divider{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;margin:18px 0}
+    .divider::before,.divider::after{content:"";flex:1;height:1px;background:#ffe0e8}
+    .foot{text-align:center;color:var(--muted);font-size:12px;margin-top:8px}
+    .kbd{display:inline-block;background:#f0eef0;border-radius:6px;padding:1px 7px;font-weight:700;color:#555}
+    [hidden]{display:none !important}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <img class="app-icon" src="icon-512.png" alt="앱 아이콘" />
+      <h1>오늘 우리, 어디 갈까?</h1>
+      <p class="sub">지역과 분위기를 고르면 데이트 코스를 짜주는 앱</p>
+    </div>
+
+    <!-- 안드로이드 -->
+    <section class="card" id="android" hidden>
+      <h2><span class="badge">Android</span> 앱 설치</h2>
+      <a class="btn" id="apkBtn" href="#">⬇️ 앱 다운로드 (.apk)</a>
+      <ol class="steps">
+        <li>위 버튼으로 <b>.apk 파일</b>을 받아요.</li>
+        <li>설치 시 “출처를 알 수 없는 앱” 경고가 뜨면 <b>허용</b>해요.</li>
+        <li><b>설치</b>를 누르면 끝! 홈 화면에 아이콘이 생겨요.</li>
+      </ol>
+      <p class="hint">구글 플레이가 아닌 직접 설치라 경고가 한 번 떠요. 정상입니다.</p>
+    </section>
+
+    <!-- 아이폰 -->
+    <section class="card" id="ios" hidden>
+      <h2><span class="badge">iPhone</span> 홈 화면에 추가</h2>
+      <a class="btn" id="iosOpenBtn" href="#">📲 Safari로 앱 열기</a>
+      <ol class="steps">
+        <li>이 페이지를 <b>Safari</b>에서 열어요(크롬 X).</li>
+        <li>아래 <b>공유 버튼</b> <span class="kbd">⬆️</span> 을 눌러요.</li>
+        <li><b>“홈 화면에 추가”</b> 를 선택하면 앱처럼 설치돼요.</li>
+      </ol>
+      <p class="hint">아이폰은 보안상 외부 앱 파일(.apk·.ipa) 설치가 막혀 있어, 홈 화면 추가로 사용해요.</p>
+    </section>
+
+    <!-- PC/기타 -->
+    <section class="card" id="other" hidden>
+      <h2>📱 휴대폰으로 열어주세요</h2>
+      <p class="hint" style="margin-top:0">아래 QR을 휴대폰 카메라로 찍으면 이 페이지가 열려요.</p>
+      <div class="qr"><img src="download-qr.png" alt="QR 코드" /></div>
+    </section>
+
+    <div class="divider">또는</div>
+
+    <section class="card">
+      <a class="btn ghost" id="webBtn" href="#">🌐 설치 없이 웹으로 바로 쓰기</a>
+      <p class="hint">설치가 부담스러우면 브라우저에서 바로 써도 똑같이 동작해요.</p>
+    </section>
+
+    <p class="foot">인터넷 연결이 필요해요. 한동안 안 쓰면 서버가 잠들어 첫 실행이 ~1분 걸릴 수 있어요.</p>
+  </div>
+
+  <script>
+    // ▶ 설정: 배포 주소가 다르면 이 두 줄만 바꾸세요.
+    var APP_URL = "https://date-course-recommender.onrender.com/";
+    var APK_URL = "./app-release.apk"; // web/ 폴더에 apk를 두면 이 주소로 받아져요. (또는 GitHub Releases 링크로 교체)
+
+    document.getElementById("webBtn").href = APP_URL;
+    document.getElementById("apkBtn").href = APK_URL;
+    document.getElementById("iosOpenBtn").href = APP_URL;
+
+    var ua = navigator.userAgent || "";
+    var isAndroid = /Android/i.test(ua);
+    var isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    var show = isAndroid ? "android" : (isIOS ? "ios" : "other");
+    document.getElementById(show).hidden = false;
+  </script>
+</body>
+</html>
