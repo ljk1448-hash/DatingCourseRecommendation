@@ -12,7 +12,6 @@
 </head>
 <body>
   <header class="app-header">
-    <button id="savedBtn" class="icon-btn" type="button" data-action="open-saved">♥ <span id="savedCount">0</span></button>
     <h1>오늘 우리, 어디 갈까?</h1>
     <p class="sub">지역과 분위기를 고르면 데이트 코스를 짜드려요</p>
   </header>
@@ -122,6 +121,11 @@
       <div id="mapContainer" class="map-box"></div>
     </div>
   </div>
+
+  <nav class="tabbar">
+    <button class="tab active" type="button" data-action="tab-home" data-tab="home"><span class="tab-ico">🏠</span><span>추천</span></button>
+    <button class="tab" type="button" data-action="tab-saved" data-tab="saved"><span class="tab-ico">♥</span><span>보관함 <span id="savedCount">0</span></span></button>
+  </nav>
 
   <script type="module" src="app.js"></script>
 </body>

@@ -83,22 +83,48 @@ async function init() {
 
   // 전역 액션 위임 (저장/지도/시트 닫기 등)
   document.addEventListener("click", onAction);
+  window.addEventListener("popstate", onPopState);
+  setActiveTab("home");
   updateSavedCount();
 }
 
-function enterResults() {
+function showResultsDom() {
   $("#settingsView").hidden = true;
   document.querySelector(".cta-bar").hidden = true;
   $("#resultsBar").hidden = false;
   document.body.classList.add("results-mode");
   window.scrollTo({ top: 0 });
 }
-function enterSettings() {
+function showSettingsDom() {
   $("#settingsView").hidden = false;
   document.querySelector(".cta-bar").hidden = false;
   $("#resultsBar").hidden = true;
   document.body.classList.remove("results-mode");
   window.scrollTo({ top: 0 });
+  setActiveTab("home");
+}
+function enterResults() {
+  if (document.body.classList.contains("results-mode")) return;
+  showResultsDom();
+  history.pushState({ layer: "results" }, "");
+}
+function setActiveTab(name) {
+  document.querySelectorAll(".tabbar .tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === name));
+}
+function goHome() {
+  $("#mapModal").hidden = true;
+  $("#savedPanel").hidden = true;
+  showSettingsDom();
+}
+// 하드웨어/스와이프 뒤로가기 → 위에 떠 있는 것부터 닫기
+function onPopState() {
+  if (!$("#mapModal").hidden) { $("#mapModal").hidden = true; return; }
+  if (!$("#savedPanel").hidden) { $("#savedPanel").hidden = true; setActiveTab("home"); return; }
+  if (document.body.classList.contains("results-mode")) { showSettingsDom(); return; }
+}
+function toggleMore(el) {
+  const row = el.closest(".stop-body") && el.closest(".stop-body").querySelector(".stop-more");
+  if (row) row.hidden = !row.hidden;
 }
 
 function renderSido(sidoList, selSido, selDistricts) {
@@ -323,9 +349,8 @@ function renderCourse(course, homeRegion, savedSigs, visitedKeys, wishKeys) {
       const thumb = s.image && s.image.thumb
         ? `<a class="stop-thumb" href="${s.image.link || s.image.thumb}" target="_blank" rel="noopener"><img src="${s.image.thumb}" alt="${escapeHtml(s.name)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.stop-thumb')?.remove()"></a>`
         : "";
-      const phone = s.phone
-        ? `<a class="stop-call" href="tel:${String(s.phone).replace(/[^0-9+-]/g, "")}">📞 전화</a>`
-        : "";
+      const phoneDigits = s.phone ? String(s.phone).replace(/[^0-9+-]/g, "") : "";
+      const attrs = `data-name="${escapeHtml(s.name)}" data-region="${escapeHtml(s.region || homeRegion)}"`;
       return `
         ${leg}
         <div class="stop">
@@ -333,18 +358,21 @@ function renderCourse(course, homeRegion, savedSigs, visitedKeys, wishKeys) {
           <div class="stop-body">
             ${thumb}
             <div class="stop-cat">${s.categoryLabel}${regionTag}</div>
-            <div class="stop-name">
-              <a href="${kmap.searchUrl(s.name)}" target="_blank" rel="noopener">${s.name}</a>
-              <a class="stop-go" href="${kmap.directionsUrl(s)}" target="_blank" rel="noopener">길찾기</a>
-              <a class="stop-review" href="${kmap.naverBlogSearchUrl(s.name, s.region || homeRegion)}" target="_blank" rel="noopener">네이버 후기</a>
-              ${phone}
-              <button class="stop-visit ${visited ? "on" : ""}" type="button" data-action="visit" data-name="${escapeHtml(s.name)}" data-region="${escapeHtml(s.region || homeRegion)}">${visited ? "✓ 다녀옴" : "다녀옴"}</button>
-              <button class="stop-wish ${wished ? "on" : ""}" type="button" data-action="wish" data-name="${escapeHtml(s.name)}" data-region="${escapeHtml(s.region || homeRegion)}">${wished ? "💛 찜" : "🤍 찜"}</button>
-              <button class="stop-swap" type="button" data-action="swap" data-sig="${sig}" data-idx="${i}">🔄 바꾸기</button>
-            </div>
+            <div class="stop-name"><a href="${kmap.searchUrl(s.name)}" target="_blank" rel="noopener">${s.name}</a></div>
             <div class="stop-desc">${s.description || ""}</div>
             <div class="stop-tags">${tags}</div>
             ${blog}
+            <div class="stop-actions">
+              <a class="act act-go" href="${kmap.directionsUrl(s)}" target="_blank" rel="noopener">🧭 길찾기</a>
+              <button class="act act-wish ${wished ? "on" : ""}" type="button" data-action="wish" ${attrs}>${wished ? "💛 찜" : "🤍 찜"}</button>
+              <button class="act act-more" type="button" data-action="more">⋯</button>
+            </div>
+            <div class="stop-more" hidden>
+              ${phoneDigits ? `<a class="act" href="tel:${phoneDigits}">📞 전화</a>` : ""}
+              <a class="act" href="${kmap.naverBlogSearchUrl(s.name, s.region || homeRegion)}" target="_blank" rel="noopener">📝 네이버 후기</a>
+              <button class="act ${visited ? "on" : ""}" type="button" data-action="visit" ${attrs}>${visited ? "✓ 다녀옴" : "다녀옴"}</button>
+              <button class="act" type="button" data-action="swap" data-sig="${sig}" data-idx="${i}">🔄 바꾸기</button>
+            </div>
           </div>
         </div>`;
     })
@@ -385,6 +413,8 @@ async function toggleSave(sig, btn) {
 async function openSaved() {
   await renderSaved();
   $("#savedPanel").hidden = false;
+  setActiveTab("saved");
+  history.pushState({ layer: "saved" }, "");
 }
 function closeSaved() { $("#savedPanel").hidden = true; }
 
@@ -415,6 +445,7 @@ async function openMap(sig) {
   $("#mapTitle").textContent = course.title || "코스 지도";
   const container = $("#mapContainer");
   $("#mapModal").hidden = false;
+  history.pushState({ layer: "map" }, "");
   const key = state.meta?.kakaoJsKey;
   try {
     await kmap.renderCourseMap(container, course, key);
@@ -436,14 +467,14 @@ function mapFallbackHtml(course) {
 
 // 전역 액션 위임
 function onAction(e) {
-  if (e.target.id === "savedPanel") return closeSaved();
-  if (e.target.id === "mapModal") return closeMap();
+  if (e.target.id === "savedPanel") return history.back();
+  if (e.target.id === "mapModal") return history.back();
   const el = e.target.closest("[data-action]");
   if (!el) return;
   const a = el.dataset.action;
   if (a === "open-saved") return openSaved();
-  if (a === "close-saved") return closeSaved();
-  if (a === "close-map") return closeMap();
+  if (a === "close-saved") return history.back();
+  if (a === "close-map") return history.back();
   if (a === "save") return toggleSave(el.dataset.sig, el);
   if (a === "map") return openMap(el.dataset.sig);
   if (a === "visit") return toggleVisit(el);
@@ -455,8 +486,11 @@ function onAction(e) {
   if (a === "wish") return toggleWish(el);
   if (a === "unwish") return unwish(el.dataset.key);
   if (a === "clear-wish") return clearWish();
-  if (a === "back-settings") return enterSettings();
+  if (a === "back-settings") return history.back();
   if (a === "redo") return recommend();
+  if (a === "tab-home") return goHome();
+  if (a === "tab-saved") return openSaved();
+  if (a === "more") return toggleMore(el);
 }
 
 async function toggleVisit(el) {
