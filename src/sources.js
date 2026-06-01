@@ -172,11 +172,11 @@ export async function fetchRegionPlaces(regionName, kakaoKey, perQuery = 8, budg
 }
 
 // 네이버 이미지 검색 → 장소 대표 썸네일 (출처 링크 포함)
-export async function naverImage(query, naverId, naverSecret) {
+export async function naverImage(query, naverId, naverSecret, matchName) {
   if (!naverId || !naverSecret) return null;
   const url = new URL("https://openapi.naver.com/v1/search/image");
   url.searchParams.set("query", query);
-  url.searchParams.set("display", "1");
+  url.searchParams.set("display", "5");
   url.searchParams.set("sort", "sim");
   url.searchParams.set("filter", "all");
   const res = await fetch(url, {
@@ -184,8 +184,19 @@ export async function naverImage(query, naverId, naverSecret) {
   });
   if (!res.ok) return null;
   const data = await res.json();
-  const it = (data.items || [])[0];
-  if (!it) return null;
+  const items = data.items || [];
+  if (!items.length) return null;
+  // 가게명과 무관한 엉뚱한 사진 방지: 이미지 제목에 가게명(가장 긴 토큰)이 들어간 것만 채택
+  if (matchName) {
+    const norm = (x) => stripHtml(String(x || "")).replace(/[\s·,.\-_/()]+/g, "").toLowerCase();
+    const token = stripHtml(matchName).split(/\s+/).filter((t) => t.length >= 2).sort((a, b) => b.length - a.length)[0] || "";
+    const key = norm(token);
+    if (key.length >= 2) {
+      const hit = items.find((it) => norm(it.title).includes(key));
+      return hit ? { thumb: hit.thumbnail || hit.link, link: hit.link } : null;
+    }
+  }
+  const it = items[0];
   return { thumb: it.thumbnail || it.link, link: it.link };
 }
 

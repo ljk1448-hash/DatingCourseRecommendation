@@ -10,7 +10,7 @@
     "cap:add:android": "cap add android",
     "cap:add:ios": "cap add ios",
     "cap:sync": "cap sync",
-    "cap:assets": "capacitor-assets generate --assetPath resources",
+    "cap:assets": "capacitor-assets generate --assetPath resources --ios --android",
     "cap:open:android": "cap open android",
     "cap:open:ios": "cap open ios"
   },
@@ -22,7 +22,10 @@
     "dotenv": "^16.4.5",
     "@capacitor/core": "^8.3.4",
     "@capacitor/android": "^8.3.4",
-    "@capacitor/ios": "^8.3.4"
+    "@capacitor/ios": "^8.3.4",
+    "@capacitor/geolocation": "^8.2.0",
+    "@capacitor/share": "^8.0.1",
+    "@capacitor/filesystem": "^8.1.2"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.3.4",

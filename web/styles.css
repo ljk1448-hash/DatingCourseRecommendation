@@ -353,7 +353,7 @@ html, body { overscroll-behavior-y: contain; }
 
 /* CTA를 탭바 위로, 하단 여백 확보 */
 .cta-bar { bottom: calc(54px + env(safe-area-inset-bottom)); }
-body { padding-bottom: calc(124px + env(safe-area-inset-bottom)); }
+body { padding-bottom: calc(152px + env(safe-area-inset-bottom)); }
 body.results-mode { padding-bottom: calc(62px + env(safe-area-inset-bottom)); }
 
 /* 장소 카드 액션(큰 버튼 + 더보기) */

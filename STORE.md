@@ -62,13 +62,7 @@ const REMOTE_API = "https://date-course-recommender.onrender.com";
 npm install
 ```
 
-3. 앱 아이콘·스플래시 생성 (이미 `resources/` 에 소스 이미지 넣어둠):
-
-```bash
-npm run cap:assets
-```
-
-> 이 명령이 안드로이드·아이폰용 모든 크기의 아이콘과 시작화면을 자동으로 만들어 줍니다.
+3. 아이콘·스플래시 소스는 `resources/` 에 이미 있어요. **아이콘 생성(`npm run cap:assets`)은 플랫폼을 추가한 뒤**(아래 4단계의 `cap:add` 다음) 실행합니다 — 플랫폼이 없으면 에러가 나요.
 
 ---
 
@@ -82,6 +76,7 @@ https://developer.android.com/studio 에서 받아 설치(기본 옵션). 안에
 
 ```bash
 npm run cap:add:android     # android 폴더 생성 (최초 1회)
+npm run cap:assets          # 앱 아이콘·스플래시 생성 (플랫폼 추가 후!)
 npm run cap:sync            # 웹 화면을 앱 안에 복사
 npm run cap:open:android    # Android Studio 가 열림
 ```
@@ -122,6 +117,8 @@ Android Studio 메뉴: **Build → Generate Signed App Bundle / APK → Android 
 
 ## 6. 아이폰 앱 만들기 (맥 필요) 🍎
 
+> 맥이 없다면 이 6·7장 대신 아래 **7-B. 클라우드 빌드(Codemagic)** 로 진행하세요(권장).
+
 > 맥이 없으면 2번 표의 클라우드 빌드 옵션을 쓰세요. 아래는 맥 기준입니다.
 
 ### 6-1. Xcode 설치
@@ -157,6 +154,31 @@ Xcode 메뉴: **Product → Archive** → 완료되면 **Distribute App → App 
 
 ---
 
+## 7-B. 맥이 없다면 — 클라우드 빌드(Codemagic) 🍎☁️
+
+맥 없이 **클라우드 맥**에서 아이폰 앱을 빌드·서명·업로드합니다 (Codemagic 무료 **500분/월**, iOS 빌드 1회 10~20분).
+저장소에 **`codemagic.yaml`** 을 이미 넣어뒀어요. 맥/Xcode 설치 불필요, **Apple Developer($99/년)** 만 있으면 됩니다.
+
+### A. 애플 쪽 준비 (맥 불필요)
+1. **Apple Developer 가입($99/년):** developer.apple.com → Account → 가입. 개인 인증은 아이폰 *Apple Developer* 앱 또는 웹에서.
+2. **App ID(번들 ID) 등록:** developer.apple.com → Certificates, Identifiers & Profiles → Identifiers → ＋ → App IDs → 번들 ID **`com.ljk1448.datecourse`**.
+3. **앱 레코드 생성:** appstoreconnect.apple.com → 앱 → ＋ → 위 번들 ID 선택, 이름·SKU 입력.
+4. **App Store Connect API 키 발급:** Users and Access → Integrations → App Store Connect API → ＋ → 이름 입력, **App Manager** 권한 → 키 생성 → **.p8 다운로드(1회만!) + Key ID·Issuer ID 메모**.
+
+### B. Codemagic 연결
+1. **codemagic.io 가입**(깃허브로 로그인) → 이 저장소를 **Add application** 으로 연결.
+2. **Teams/Personal → Integrations → App Store Connect**: 위 `.p8` + Key ID + Issuer ID 등록, 통합 **이름**을 정함(예: `CodemagicASC`).
+3. `codemagic.yaml` 의 `app_store_connect: CodemagicASC` 를 그 **이름과 똑같이** 맞춤.
+4. 권한 있는 API 키면 인증서·프로필은 **Codemagic가 자동 생성/관리**(자동 서명).
+
+### C. 빌드 & 업로드
+1. `git push` → Codemagic 대시보드 → **ios-appstore** 워크플로 → **Start new build**.
+2. 10~20분 뒤 IPA 생성 → **TestFlight에 자동 업로드**.
+3. App Store Connect → **TestFlight**에서 지인을 이메일/링크로 초대(최대 10,000명) → 베타.
+4. 정식 출시: 메타데이터·스크린샷·개인정보 입력 후 **심사 제출**. (`codemagic.yaml`의 `submit_to_app_store` 주석을 풀면 자동 제출)
+
+> 스크린샷은 아이폰에서 캡처하거나 필요한 크기(6.7"·6.5" 등)로 맞추면 됩니다. 인앱 카카오 지도는 네이티브에서 안 뜰 수 있으나 외부 길찾기 링크는 정상 작동해요.
+
 ## 8. 스토어 자료 체크리스트 📝
 
 - [ ] 앱 이름 / 짧은 설명(한 줄) / 자세한 설명
@@ -183,15 +205,16 @@ Xcode 메뉴: **Product → Archive** → 완료되면 **Distribute App → App 
 
 ```bash
 npm install                 # 의존성 설치(최초)
-npm run cap:assets          # 아이콘/스플래시 생성
 
 # 안드로이드
-npm run cap:add:android     # 최초 1회
+npm run cap:add:android     # 최초 1회 (android 폴더 생성)
+npm run cap:assets          # 아이콘/스플래시 생성 (반드시 cap:add 다음!)
 npm run cap:sync            # 코드 바꿀 때마다
 npm run cap:open:android    # Android Studio 열기
 
-# 아이폰 (맥)
+# 아이폰 (맥이 있을 때 — 없으면 7-B Codemagic)
 npm run cap:add:ios         # 최초 1회
+npm run cap:assets          # 아이콘/스플래시 생성
 npm run cap:sync
 npm run cap:open:ios        # Xcode 열기
 ```

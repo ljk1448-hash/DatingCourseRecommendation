@@ -122,7 +122,7 @@ async function enrichStops(courses, region) {
           if (data === undefined) {
             const [blog, image, local] = await Promise.all([
               naverBlog(s.name, rg, NAVER_ID, NAVER_SECRET),
-              naverImage(`${s.name} ${rg}`, NAVER_ID, NAVER_SECRET),
+              naverImage(`${s.name} ${rg}`, NAVER_ID, NAVER_SECRET, s.name),
               naverLocal(s.name, rg, NAVER_ID, NAVER_SECRET),
             ]);
             data = { blog, image, local };
@@ -437,7 +437,7 @@ app.get("/api/nearby", async function (req, res) {
       await Promise.all(
         places.slice(0, 12).map(async (p) => {
           try {
-            const img = await naverImage(`${p.name} ${region || ""}`, NAVER_ID, NAVER_SECRET);
+            const img = await naverImage(`${p.name} ${region || ""}`, NAVER_ID, NAVER_SECRET, p.name);
             if (img && img.thumb) p.image = { thumb: img.thumb, link: img.link };
           } catch {}
         })

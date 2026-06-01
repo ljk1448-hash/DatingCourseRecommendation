@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">오늘 우리, 어디 갈까</string>
+    <string name="title_activity_main">오늘 우리, 어디 갈까</string>
+    <string name="package_name">com.ljk1448.datecourse</string>
+    <string name="custom_url_scheme">com.ljk1448.datecourse</string>
+</resources>

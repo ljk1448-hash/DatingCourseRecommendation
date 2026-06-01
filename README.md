@@ -48,8 +48,8 @@ Capacitor로 이 PWA를 네이티브 앱으로 패키징해 Google Play·App Sto
 
 ```bash
 npm install
-npm run cap:assets        # 아이콘/스플래시 생성(resources/)
 npm run cap:add:android   # 안드로이드 프로젝트 생성(윈도우 가능, 최초 1회)
+npm run cap:assets        # 아이콘/스플래시 생성(플랫폼 추가 후!)
 npm run cap:sync          # 코드 변경분을 앱에 반영
 npm run cap:open:android  # Android Studio 열기
 ```

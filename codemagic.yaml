@@ -1,0 +1,48 @@
+# Codemagic — 맥 없이 아이폰(App Store) 빌드 설정
+# 사용법:
+#  1) 이 파일을 저장소에 커밋 → git push
+#  2) codemagic.io 가입(깃허브 로그인) → 이 저장소 연결
+#  3) Codemagic에 "App Store Connect API 키" 통합 등록 후, 아래 integrations 이름을 그 이름과 똑같이 맞추기
+#  4) ios-appstore 워크플로 실행 → TestFlight로 자동 업로드
+workflows:
+  ios-appstore:
+    name: iOS - App Store (Capacitor)
+    instance_type: mac_mini_m2          # 무료 플랜에서 쓰는 클라우드 맥(M2)
+    max_build_duration: 60
+    integrations:
+      app_store_connect: CodemagicASC   # ← Codemagic에 등록한 App Store Connect API 키의 "이름"으로 바꾸세요
+    environment:
+      ios_signing:
+        distribution_type: app_store    # 자동 서명(App Store 배포용)
+        bundle_identifier: com.ljk1448.datecourse
+      node: 20
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: 의존성 설치
+        script: npm ci
+      - name: iOS 플랫폼 준비 + 아이콘 + 동기화
+        script: |
+          [ -d "ios" ] || npx cap add ios
+          npx capacitor-assets generate --assetPath resources --ios
+          npx cap sync ios
+      - name: CocoaPods 설치
+        script: |
+          cd ios/App && pod install
+      - name: 빌드 번호 자동 증가
+        script: |
+          cd ios/App && agvtool new-version -all "$BUILD_NUMBER"
+      - name: 서명 적용 + IPA 빌드
+        script: |
+          xcode-project use-profiles
+          xcode-project build-ipa \
+            --workspace "ios/App/App.xcworkspace" \
+            --scheme "App"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true      # 지인 베타(TestFlight)로 자동 업로드
+        # submit_to_app_store: true     # 정식 심사 제출까지 자동화하려면 주석 해제

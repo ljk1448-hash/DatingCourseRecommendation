@@ -176,18 +176,17 @@ function loadNearby() {
   const listEl = $("#nearbyList");
   $("#nearbyMap").style.display = "none";
   if (!navigator.onLine) { listEl.innerHTML = `<div class="empty">오프라인이에요. 연결되면 주변을 볼 수 있어요.</div>`; return; }
-  if (!navigator.geolocation) { listEl.innerHTML = `<div class="empty">이 기기에선 위치를 쓸 수 없어요.</div>`; return; }
   listEl.innerHTML = `<div class="loading"><div class="heart">💗</div>내 주변을 찾는 중…</div>`;
-  navigator.geolocation.getCurrentPosition(async (pos) => {
+  getPosition().then(async (pos) => {
     try {
       const data = await nearby(pos.coords.latitude, pos.coords.longitude);
       if (data && data.error) { listEl.innerHTML = `<div class="empty">${data.error}</div>`; return; }
       state.nearbyData = data;
       await renderNearby(data);
     } catch { listEl.innerHTML = `<div class="empty">주변 정보를 가져오지 못했어요. 잠시 후 다시 시도해 주세요.</div>`; }
-  }, () => {
-    listEl.innerHTML = `<div class="empty">위치 권한이 필요해요.<br>권한을 허용한 뒤 ↻ 새로고침을 눌러주세요.</div>`;
-  }, { timeout: 9000, enableHighAccuracy: true });
+  }).catch(() => {
+    listEl.innerHTML = `<div class="empty">위치 권한이 필요해요.<br>휴대폰 설정에서 위치 권한을 허용한 뒤 ↻ 새로고침을 눌러주세요.</div>`;
+  });
 }
 
 async function renderNearby(data) {
@@ -456,19 +455,30 @@ function selectRegion(sido, district) {
   renderSido(state.meta.sido || [], sido, [district]);
 }
 
+// 위치 획득: 네이티브(Capacitor Geolocation) 우선 → 브라우저 폴백
+async function getPosition() {
+  const G = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Geolocation;
+  if (G) {
+    try { await G.requestPermissions(); } catch {}
+    return await G.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 });
+  }
+  if (!navigator.geolocation) throw new Error("no-geolocation");
+  return await new Promise((resolve, reject) =>
+    navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000, enableHighAccuracy: true }));
+}
+
 async function useCurrentLocation() {
   const btn = $("#locBtn");
-  if (!navigator.geolocation) { alert("이 브라우저에선 위치를 쓸 수 없어요."); return; }
   if (btn) { btn.disabled = true; btn.textContent = "📍 찾는 중..."; }
   const done = () => { if (btn) { btn.disabled = false; btn.textContent = "📍 현재 위치"; } };
-  navigator.geolocation.getCurrentPosition(async (pos) => {
-    try {
-      const r = await regionFromCoords(pos.coords.latitude, pos.coords.longitude);
-      if (r && r.sido && r.district) selectRegion(r.sido, r.district);
-      else alert("현재 위치의 지역을 찾지 못했어요. 직접 골라주세요.");
-    } catch { alert("지역을 가져오지 못했어요."); }
-    finally { done(); }
-  }, () => { done(); alert("위치 권한이 필요해요."); }, { timeout: 8000 });
+  try {
+    const pos = await getPosition();
+    const r = await regionFromCoords(pos.coords.latitude, pos.coords.longitude);
+    if (r && r.sido && r.district) selectRegion(r.sido, r.district);
+    else alert("현재 위치의 지역을 찾지 못했어요. 직접 골라주세요.");
+  } catch {
+    alert("위치 권한이 필요해요. 휴대폰 설정 > 앱 권한에서 위치를 허용해 주세요.");
+  } finally { done(); }
 }
 
 function syncTagChips() {
@@ -713,7 +723,7 @@ function mapFallbackHtml(course) {
     .map((s, i) => `<li>${i + 1}. ${s.name} <a href="${kmap.directionsUrl(s)}" target="_blank" rel="noopener">길찾기</a></li>`)
     .join("");
   return `<div class="map-fallback">
-    <p>지도를 표시하려면 카카오 JS 키 설정이 필요해요. 우선 장소 길찾기 링크로 안내할게요.</p>
+    <p>아래 <b>길찾기</b>를 누르면 카카오맵 앱에서 위치와 경로를 볼 수 있어요.</p>
     <ol>${items}</ol>
   </div>`;
 }
