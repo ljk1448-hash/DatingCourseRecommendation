@@ -5,22 +5,22 @@
 
 import { travelKm, walkMinutes, driveMinutes } from "./geo.js";
 
-// 카테고리별 코스 내 순서(phase). 작을수록 앞 단계.
-const PHASE = {
-  meal: 1,
-  activity: 2,
-  culture: 2,
-  dessert: 3,
-  cafe: 3,
-  walk: 4,
-  nightview: 5,
-  bar: 5,
+// 시작 시간대별 카테고리 순서(phase). 작을수록 앞 단계.
+const PHASE_BY_DAYPART = {
+  // 오전: 브런치(식사) → 카페/디저트 → 전시·액티비티 → 산책
+  morning: { meal: 1, cafe: 2, dessert: 2, activity: 3, culture: 3, walk: 4, nightview: 5, bar: 5 },
+  // 오후/저녁: 카페·전시 → 액티비티·산책 → 식사(저녁) → 디저트 → 야경·술
+  afternoon: { cafe: 1, culture: 1, activity: 2, walk: 2, meal: 3, dessert: 4, nightview: 5, bar: 5 },
 };
+function phaseMap(daypart) {
+  return PHASE_BY_DAYPART[daypart] || PHASE_BY_DAYPART.afternoon;
+}
 
 // 카테고리별 한 코스에 들어갈 수 있는 최대 개수
-function categoryCaps(stops) {
+function categoryCaps() {
+  // 식사→식사 연속을 막기 위해 식사는 한 코스에 1곳
   return {
-    meal: stops >= 4 ? 2 : 1,
+    meal: 1,
     cafe: 1,
     dessert: 1,
     activity: 1,
@@ -65,8 +65,8 @@ function matchScore(place, desiredTags, budget = "normal") {
 }
 
 /** 한 코스를 greedy 로 구성 */
-function buildCourse(candidates, { desiredTags, budgetKm, stops, includeNight, seedIndex, mode = "walk", budget = "normal" }) {
-  const caps = categoryCaps(stops);
+function buildCourse(candidates, { desiredTags, budgetKm, stops, includeNight, seedIndex, mode = "walk", budget = "normal", daypart = "afternoon" }) {
+  const caps = categoryCaps();
   const W_MATCH = 2;
   const W_DIST = mode === "car" ? 0.2 : 1.5;
 
@@ -112,11 +112,12 @@ function buildCourse(candidates, { desiredTags, budgetKm, stops, includeNight, s
     totalKm += bestKm;
   }
 
-  return orderAndSummarize(chosen, desiredTags, mode);
+  return orderAndSummarize(chosen, desiredTags, mode, daypart);
 }
 
 /** 선택된 장소들을 자연스러운 흐름(phase)으로 재정렬하고 코스 정보 생성 */
-function orderAndSummarize(places, desiredTags, mode = "walk") {
+function orderAndSummarize(places, desiredTags, mode = "walk", daypart = "afternoon") {
+  const PHASE = phaseMap(daypart);
   const ordered = [...places].sort(
     (a, b) => (PHASE[a.category] ?? 9) - (PHASE[b.category] ?? 9)
   );
@@ -223,9 +224,11 @@ export function recommendCourses({
   excludeKeys = [],
   seedOffset = 0,
   count = 3,
+  daypart = "afternoon",
 }) {
   const allow = regions && regions.length ? new Set(regions) : (region ? new Set([region]) : null);
   const exCats = new Set(excludeCategories || []);
+  if (daypart === "morning") { exCats.add("nightview"); exCats.add("bar"); } // 오전엔 야경·술 제외
   const exKeys = new Set(excludeKeys || []);
   const candidates = places.filter(
     (p) =>
@@ -251,6 +254,7 @@ export function recommendCourses({
       seedIndex: seed,
       mode,
       budget,
+      daypart,
     });
     if (!course || course.stops.length < 2) continue;
     const sig = signature(course);

@@ -49,11 +49,10 @@
       </div>
 
       <div class="field">
-        <label>예산 <small>(검색 성향 기반 근사)</small></label>
-        <div id="budget" class="segmented">
-          <button type="button" class="seg" data-budget="value">가성비</button>
-          <button type="button" class="seg selected" data-budget="normal">보통</button>
-          <button type="button" class="seg" data-budget="premium">프리미엄</button>
+        <label>언제 시작해요?</label>
+        <div id="daypart" class="segmented">
+          <button type="button" class="seg selected" data-daypart="morning">🌤️ 오전</button>
+          <button type="button" class="seg" data-daypart="afternoon">🌆 오후</button>
         </div>
       </div>
 
@@ -63,40 +62,53 @@
         <div class="range-hint"><span>가깝게</span><span>멀리까지</span></div>
       </div>
 
-      <div class="field">
-        <label for="stops">코스 장소 수 <span id="stopsLabel" class="pill">4곳</span></label>
-        <input type="range" id="stops" min="2" max="5" step="1" value="4" />
-      </div>
+      <details class="more-opts">
+        <summary>⚙️ 상세 옵션</summary>
 
-      <div class="field toggle-row">
-        <label for="includeNight">야경 · 술 한잔 포함</label>
-        <label class="switch"><input type="checkbox" id="includeNight" checked /><span class="slider"></span></label>
-      </div>
+        <div class="field">
+          <label>예산 <small>(검색 성향 기반 근사)</small></label>
+          <div id="budget" class="segmented">
+            <button type="button" class="seg" data-budget="value">가성비</button>
+            <button type="button" class="seg selected" data-budget="normal">보통</button>
+            <button type="button" class="seg" data-budget="premium">프리미엄</button>
+          </div>
+        </div>
 
-      <div class="field toggle-row">
-        <label for="nearby">근교 지역까지 허용</label>
-        <label class="switch"><input type="checkbox" id="nearby" /><span class="slider"></span></label>
-      </div>
+        <div class="field">
+          <label for="stops">코스 장소 수 <span id="stopsLabel" class="pill">4곳</span></label>
+          <input type="range" id="stops" min="2" max="5" step="1" value="4" />
+        </div>
 
-      <div class="field toggle-row">
-        <label for="openNow">지금 시간대 맞춤</label>
-        <label class="switch"><input type="checkbox" id="openNow" /><span class="slider"></span></label>
-      </div>
+        <div class="field toggle-row">
+          <label for="includeNight">야경 · 술 한잔 포함</label>
+          <label class="switch"><input type="checkbox" id="includeNight" checked /><span class="slider"></span></label>
+        </div>
 
-      <div class="field toggle-row">
-        <label for="weather">비 오면 실내 위주</label>
-        <label class="switch"><input type="checkbox" id="weather" /><span class="slider"></span></label>
-      </div>
+        <div class="field toggle-row">
+          <label for="nearby">근교 지역까지 허용</label>
+          <label class="switch"><input type="checkbox" id="nearby" /><span class="slider"></span></label>
+        </div>
 
-      <div class="field toggle-row">
-        <label for="excludeVisited">가본 곳 제외</label>
-        <label class="switch"><input type="checkbox" id="excludeVisited" /><span class="slider"></span></label>
-      </div>
+        <div class="field toggle-row">
+          <label for="openNow">지금 시간대 맞춤</label>
+          <label class="switch"><input type="checkbox" id="openNow" /><span class="slider"></span></label>
+        </div>
 
-      <div class="field toggle-row" id="llmRow" hidden>
-        <label for="useLlm">AI 추천 멘트 받기</label>
-        <label class="switch"><input type="checkbox" id="useLlm" /><span class="slider"></span></label>
-      </div>
+        <div class="field toggle-row">
+          <label for="weather">비 오면 실내 위주</label>
+          <label class="switch"><input type="checkbox" id="weather" /><span class="slider"></span></label>
+        </div>
+
+        <div class="field toggle-row">
+          <label for="excludeVisited">가본 곳 제외</label>
+          <label class="switch"><input type="checkbox" id="excludeVisited" /><span class="slider"></span></label>
+        </div>
+
+        <div class="field toggle-row" id="llmRow" hidden>
+          <label for="useLlm">AI 추천 멘트 받기</label>
+          <label class="switch"><input type="checkbox" id="useLlm" /><span class="slider"></span></label>
+        </div>
+      </details>
     </section>
 
     </div>
@@ -106,6 +118,14 @@
       <div class="nearby-head">
         <b id="nearbyTitle">내 주변</b>
         <button class="rb-btn" type="button" data-action="nearby-refresh">↻ 새로고침</button>
+      </div>
+      <div class="near-loc-fix">
+        <button class="link-btn" type="button" data-action="near-region-toggle">📍 위치가 정확하지 않나요? 지역 직접 선택</button>
+        <div id="nearRegionPicker" class="near-region" hidden>
+          <select id="nearSido" aria-label="시/도"></select>
+          <select id="nearGu" aria-label="시군구"></select>
+          <button class="nf" type="button" data-action="near-region-go">이 지역으로 보기</button>
+        </div>
       </div>
       <div id="nearbyMap" class="map-box nearby-map"></div>
       <button class="near-cta" type="button" data-action="near-course">💕 이 근처로 코스 짜기</button>

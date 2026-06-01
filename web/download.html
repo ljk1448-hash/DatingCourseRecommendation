@@ -5,15 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#ff5a7e" />
   <title>오늘 우리, 어디 갈까? — 앱 받기</title>
+  <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icon-180.png" />
   <style>
     :root{ --pink:#ff5a7e; --pink2:#ff8aa3; --cream:#fff6f8; --ink:#2b2b33; --muted:#8a8a96; }
     *{box-sizing:border-box}
     body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
       background:var(--cream);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.55}
-    .wrap{max-width:460px;margin:0 auto;padding:32px 20px 56px}
-    .hero{text-align:center;margin-bottom:24px}
-    .app-icon{width:96px;height:96px;border-radius:24px;box-shadow:0 10px 30px rgba(255,90,126,.35);display:block;margin:0 auto 14px}
+    .wrap{max-width:460px;margin:0 auto;padding:28px 20px 56px}
+    .hero{text-align:center;margin-bottom:18px}
+    .app-icon{width:92px;height:92px;border-radius:22px;box-shadow:0 10px 30px rgba(255,90,126,.35);display:block;margin:0 auto 14px}
     h1{font-size:22px;margin:0 0 6px}
     .sub{color:var(--muted);font-size:14px;margin:0}
     .card{background:#fff;border-radius:18px;padding:20px;box-shadow:0 4px 18px rgba(0,0,0,.06);margin-bottom:16px}
@@ -23,7 +25,8 @@
       background:linear-gradient(135deg,var(--pink),var(--pink2));color:#fff;border:none;border-radius:14px;
       padding:16px;font-size:16px;font-weight:700;text-decoration:none;cursor:pointer;box-shadow:0 6px 16px rgba(255,90,126,.35)}
     .btn.ghost{background:#fff;color:var(--pink);border:1.5px solid var(--pink);box-shadow:none}
-    .steps{margin:12px 0 0;padding:0;list-style:none;counter-reset:s}
+    .btn.sec{background:#fff;color:var(--ink);border:1.5px solid var(--muted);box-shadow:none;font-weight:600}
+    .steps{margin:14px 0 0;padding:0;list-style:none;counter-reset:s}
     .steps li{counter-increment:s;position:relative;padding:8px 0 8px 34px;font-size:14px;color:#444}
     .steps li::before{content:counter(s);position:absolute;left:0;top:7px;width:22px;height:22px;border-radius:50%;
       background:var(--cream);color:var(--pink);font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center}
@@ -34,6 +37,8 @@
     .divider::before,.divider::after{content:"";flex:1;height:1px;background:#ffe0e8}
     .foot{text-align:center;color:var(--muted);font-size:12px;margin-top:8px}
     .kbd{display:inline-block;background:#f0eef0;border-radius:6px;padding:1px 7px;font-weight:700;color:#555}
+    .warn{background:#fff3d6;border:1px solid #ffe09e;color:#7a5c12;border-radius:14px;padding:14px 16px;margin-bottom:16px;font-size:13.5px;line-height:1.5}
+    .warn b{color:#6b4e0a}
     [hidden]{display:none !important}
   </style>
 </head>
@@ -45,31 +50,35 @@
       <p class="sub">지역과 분위기를 고르면 데이트 코스를 짜주는 앱</p>
     </div>
 
-    <!-- 안드로이드 -->
-    <section class="card" id="android" hidden>
-      <h2><span class="badge">Android</span> 앱 설치</h2>
-      <a class="btn" id="apkBtn" href="#">⬇️ 앱 다운로드 (.apk)</a>
-      <ol class="steps">
-        <li>위 버튼으로 <b>.apk 파일</b>을 받아요.</li>
-        <li>설치 시 “출처를 알 수 없는 앱” 경고가 뜨면 <b>허용</b>해요.</li>
-        <li><b>설치</b>를 누르면 끝! 홈 화면에 아이콘이 생겨요.</li>
-      </ol>
-      <p class="hint">구글 플레이가 아닌 직접 설치라 경고가 한 번 떠요. 정상입니다.</p>
+    <section class="warn" id="inappWarn" hidden>
+      ⚠️ <b>카카오톡 안에서 열렸어요.</b> 여기선 앱 설치가 막혀 있어요.<br>
+      <span id="inappHelp"></span>
+      <a class="btn ghost" id="openChromeBtn" href="#" style="margin-top:12px" hidden>🌐 크롬으로 열기</a>
     </section>
 
-    <!-- 아이폰 -->
+    <section class="card" id="android" hidden>
+      <h2><span class="badge">Android</span> 앱 설치</h2>
+      <button class="btn" id="installBtn" hidden>📲 앱 설치하기</button>
+      <ol class="steps" id="androidSteps">
+        <li>오른쪽 위 <span class="kbd">⋮</span> 메뉴를 눌러요.</li>
+        <li><b>“홈 화면에 추가”</b>(또는 “앱 설치”)를 선택해요.</li>
+        <li><b>추가/설치</b>를 누르면 홈 화면에 아이콘이 생겨요!</li>
+      </ol>
+      <a class="btn sec" id="apkBtn" href="#" hidden style="margin-top:12px">⬇️ 또는 APK로 설치</a>
+      <p class="hint" id="apkNote" hidden>APK 파일은 아직 준비 중이에요. 위 “홈 화면에 추가”로 설치해 주세요.</p>
+    </section>
+
     <section class="card" id="ios" hidden>
       <h2><span class="badge">iPhone</span> 홈 화면에 추가</h2>
       <a class="btn" id="iosOpenBtn" href="#">📲 Safari로 앱 열기</a>
       <ol class="steps">
-        <li>이 페이지를 <b>Safari</b>에서 열어요(크롬 X).</li>
+        <li>이 페이지를 <b>Safari</b>에서 열어요(크롬·카톡 X).</li>
         <li>아래 <b>공유 버튼</b> <span class="kbd">⬆️</span> 을 눌러요.</li>
         <li><b>“홈 화면에 추가”</b> 를 선택하면 앱처럼 설치돼요.</li>
       </ol>
       <p class="hint">아이폰은 보안상 외부 앱 파일(.apk·.ipa) 설치가 막혀 있어, 홈 화면 추가로 사용해요.</p>
     </section>
 
-    <!-- PC/기타 -->
     <section class="card" id="other" hidden>
       <h2>📱 휴대폰으로 열어주세요</h2>
       <p class="hint" style="margin-top:0">아래 QR을 휴대폰 카메라로 찍으면 이 페이지가 열려요.</p>
@@ -87,19 +96,53 @@
   </div>
 
   <script>
-    // ▶ 설정: 배포 주소가 다르면 이 두 줄만 바꾸세요.
+    // 배포 주소가 다르면 이 두 줄만 바꾸세요.
     var APP_URL = "https://date-course-recommender.onrender.com/";
-    var APK_URL = "./app-release.apk"; // web/ 폴더에 apk를 두면 이 주소로 받아져요. (또는 GitHub Releases 링크로 교체)
+    var APK_URL = "./app-release.apk";
 
-    document.getElementById("webBtn").href = APP_URL;
-    document.getElementById("apkBtn").href = APK_URL;
-    document.getElementById("iosOpenBtn").href = APP_URL;
+    var $ = function (id) { return document.getElementById(id); };
+    $("webBtn").href = APP_URL;
+    $("apkBtn").href = APK_URL;
+    $("iosOpenBtn").href = APP_URL;
 
     var ua = navigator.userAgent || "";
     var isAndroid = /Android/i.test(ua);
     var isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    var isInApp = /KAKAOTALK|FBAN|FBAV|Instagram|Line\/|NAVER\(inapp|; wv\)/i.test(ua);
+
+    if (isInApp) {
+      $("inappWarn").hidden = false;
+      if (isAndroid) {
+        $("inappHelp").textContent = "아래 ‘크롬으로 열기’를 누르거나, 오른쪽 위 ⋮ → ‘다른 브라우저로 열기’를 선택하세요.";
+        var intentUrl = "intent://" + location.host + location.pathname + "#Intent;scheme=https;package=com.android.chrome;end";
+        var oc = $("openChromeBtn"); oc.hidden = false; oc.href = intentUrl;
+      } else {
+        $("inappHelp").textContent = "오른쪽 아래 ‘…’ → ‘다른 브라우저로 열기(Safari)’를 선택한 뒤 설치하세요.";
+      }
+    }
+
     var show = isAndroid ? "android" : (isIOS ? "ios" : "other");
-    document.getElementById(show).hidden = false;
+    $(show).hidden = false;
+
+    if (isAndroid) {
+      var deferred = null;
+      window.addEventListener("beforeinstallprompt", function (e) {
+        e.preventDefault(); deferred = e;
+        var b = $("installBtn"); b.hidden = false;
+        b.onclick = function () { b.disabled = true; deferred.prompt(); deferred.userChoice.finally(function(){ b.hidden = true; }); };
+      });
+      if (/^\.?\//.test(APK_URL)) {
+        fetch(APK_URL, { method: "HEAD" }).then(function (r) {
+          if (r.ok) $("apkBtn").hidden = false; else $("apkNote").hidden = false;
+        }).catch(function () { $("apkNote").hidden = false; });
+      } else {
+        $("apkBtn").hidden = false;
+      }
+    }
+
+    if ("serviceWorker" in navigator && !isInApp) {
+      navigator.serviceWorker.register("sw.js").catch(function () {});
+    }
   </script>
 </body>
 </html>

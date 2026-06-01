@@ -1,5 +1,5 @@
 // 데이트 코스 추천 - 앱 진입/오케스트레이터 (ES 모듈)
-import { getMeta, recommend as apiRecommend, swapPlace, regionFromCoords, nearby } from "./js/api.js";
+import { getMeta, recommend as apiRecommend, swapPlace, regionFromCoords, nearby, nearbyRegion } from "./js/api.js";
 import { savedCourses, visitedPlaces, wishPlaces, session, courseSignature, placeKey } from "./js/storage.js";
 import * as kmap from "./js/map.js";
 import * as kgeo from "./js/geo.js";
@@ -13,6 +13,7 @@ const state = {
   regions: new Set(),
   lastBody: null,
   meta: null,
+  daypart: "morning",
   nearbyData: null,
   nearbyFilter: "all",
 };
@@ -78,6 +79,20 @@ async function init() {
       state.budget = b.dataset.budget;
     });
   });
+
+  const daypartSeg = $("#daypart");
+  if (daypartSeg) {
+    daypartSeg.querySelectorAll(".seg").forEach((b) => {
+      b.addEventListener("click", () => {
+        daypartSeg.querySelectorAll(".seg").forEach((x) => x.classList.remove("selected"));
+        b.classList.add("selected");
+        state.daypart = b.dataset.daypart;
+      });
+    });
+    const initDp = new Date().getHours() < 12 ? "morning" : "afternoon";
+    state.daypart = initDp;
+    daypartSeg.querySelectorAll(".seg").forEach((b) => b.classList.toggle("selected", b.dataset.daypart === initDp));
+  }
 
   $("#recommendBtn").addEventListener("click", recommend);
   $("#locBtn")?.addEventListener("click", useCurrentLocation);
@@ -151,6 +166,7 @@ async function openNearby() {
   $("#mapModal").hidden = true;
   $("#savedPanel").hidden = true;
   showNearbyDom();
+  ensureNearRegionPicker();
   history.pushState({ layer: "nearby" }, "");
   if (state.nearbyData) await renderNearby(state.nearbyData);
   else loadNearby();
@@ -228,6 +244,35 @@ function nearbyToCourse() {
   selectRegion(parts[0], parts.slice(1).join(" "));
   recommend();
 }
+
+// 수동 지역 선택(위치 부정확 대비)
+function ensureNearRegionPicker() {
+  const sidoSel = $("#nearSido");
+  if (!sidoSel || sidoSel.dataset.ready) return;
+  const sidos = state.meta?.sido || [];
+  sidoSel.innerHTML = sidos.map((s) => `<option value="${escapeHtml(s.name)}">${escapeHtml(s.name)}</option>`).join("");
+  const fillGu = () => {
+    const s = sidos.find((x) => x.name === sidoSel.value) || sidos[0];
+    $("#nearGu").innerHTML = ((s && s.districts) || []).map((d) => `<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join("");
+  };
+  sidoSel.addEventListener("change", fillGu);
+  fillGu();
+  sidoSel.dataset.ready = "1";
+}
+
+async function loadNearbyByRegion(region) {
+  const listEl = $("#nearbyList");
+  $("#nearbyMap").style.display = "none";
+  if (!navigator.onLine) { listEl.innerHTML = `<div class="empty">오프라인이에요. 연결되면 볼 수 있어요.</div>`; return; }
+  listEl.innerHTML = `<div class="loading"><div class="heart">💗</div>${escapeHtml(region)} 주변을 찾는 중…</div>`;
+  try {
+    const data = await nearbyRegion(region);
+    if (data && data.error) { listEl.innerHTML = `<div class="empty">${data.error}</div>`; return; }
+    if (!data.region) data.region = region;
+    state.nearbyData = data;
+    await renderNearby(data);
+  } catch { listEl.innerHTML = `<div class="empty">주변 정보를 가져오지 못했어요.</div>`; }
+}
 function setActiveTab(name) {
   document.querySelectorAll(".tabbar .tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === name));
 }
@@ -269,6 +314,7 @@ function snapshotUI() {
     tags: [...state.tags],
     transport: state.transport,
     budget: state.budget,
+    daypart: state.daypart,
     distance: +$("#distance").value,
     stops: +$("#stops").value,
     includeNight: $("#includeNight").checked,
@@ -296,6 +342,10 @@ function restoreUI(ui) {
   if (ui.budget) {
     state.budget = ui.budget;
     document.querySelectorAll("#budget .seg").forEach((b) => b.classList.toggle("selected", b.dataset.budget === ui.budget));
+  }
+  if (ui.daypart) {
+    state.daypart = ui.daypart;
+    document.querySelectorAll("#daypart .seg").forEach((b) => b.classList.toggle("selected", b.dataset.daypart === ui.daypart));
   }
   if (Number.isFinite(ui.distance)) { const d = $("#distance"); d.value = String(ui.distance); d.dispatchEvent(new Event("input")); }
   if (Number.isFinite(ui.stops)) { const st = $("#stops"); st.value = String(ui.stops); st.dispatchEvent(new Event("input")); }
@@ -482,6 +532,7 @@ async function recommend() {
     tags: [...state.tags],
     mode: state.transport,
     budget: state.budget,
+    daypart: state.daypart,
     distanceKm: +$("#distance").value,
     stops: +$("#stops").value,
     includeNight: $("#includeNight").checked,
@@ -696,6 +747,8 @@ function onAction(e) {
   if (a === "nearby-refresh") { state.nearbyData = null; return loadNearby(); }
   if (a === "near-filter") { state.nearbyFilter = el.dataset.k; return renderNearby(state.nearbyData); }
   if (a === "near-course") return nearbyToCourse();
+  if (a === "near-region-toggle") { const pk = $("#nearRegionPicker"); pk.hidden = !pk.hidden; return; }
+  if (a === "near-region-go") { return loadNearbyByRegion(`${$("#nearSido").value} ${$("#nearGu").value}`.trim()); }
   if (a === "more") return toggleMore(el);
 }
 

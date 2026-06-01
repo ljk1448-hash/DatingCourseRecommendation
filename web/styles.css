@@ -408,3 +408,18 @@ body.results-mode { padding-bottom: calc(62px + env(safe-area-inset-bottom)); }
 .near-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
 .map-me { background: #3b82f6; color: #fff; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.3); white-space: nowrap; }
 body.nearby-mode { padding-bottom: calc(62px + env(safe-area-inset-bottom)); }
+
+/* ── 상세 옵션 접기(하이브리드 UI) ── */
+.more-opts { border-top: 1px dashed var(--line); margin-top: 6px; padding-top: 4px; }
+.more-opts > summary { list-style: none; cursor: pointer; font-size: 14px; font-weight: 700; color: var(--rose-deep); padding: 10px 2px; display: flex; align-items: center; gap: 6px; }
+.more-opts > summary::-webkit-details-marker { display: none; }
+.more-opts > summary::after { content: "▾"; margin-left: auto; transition: transform .2s; }
+.more-opts[open] > summary::after { transform: rotate(180deg); }
+.more-opts > .field:first-of-type { margin-top: 8px; }
+
+/* ── 내 주변 수동 지역 선택 ── */
+.near-loc-fix { margin: 0 4px 10px; }
+.near-loc-fix .link-btn { font-size: 12.5px; }
+.near-region { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.near-region select { flex: 1 1 40%; min-width: 0; padding: 9px 10px; border: 1.5px solid var(--line); border-radius: 10px; font-size: 13px; background: #fff; color: var(--ink); }
+.near-region .nf { flex: 1 1 100%; background: var(--rose-soft); border-color: var(--rose); color: var(--rose-deep); }

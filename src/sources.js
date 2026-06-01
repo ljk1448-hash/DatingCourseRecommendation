@@ -287,3 +287,24 @@ export async function fetchNearbyPlaces(lat, lng, kakaoKey, radius = 1500) {
   places.sort((a, b) => (a.distance ?? 1e9) - (b.distance ?? 1e9));
   return places;
 }
+
+// 지역명 → 중심 좌표 (수동 '내 주변' 폴백용). 주소검색 우선, 실패 시 키워드검색 첫 결과.
+export async function kakaoRegionCenter(regionName, kakaoKey) {
+  try {
+    const u = new URL("https://dapi.kakao.com/v2/local/search/address.json");
+    u.searchParams.set("query", regionName);
+    u.searchParams.set("size", "1");
+    const r = await fetch(u, { headers: { Authorization: `KakaoAK ${kakaoKey}` } });
+    if (r.ok) {
+      const d = ((await r.json()).documents || [])[0];
+      if (d) return { lat: Number(d.y), lng: Number(d.x) };
+    }
+  } catch {}
+  const u2 = new URL("https://dapi.kakao.com/v2/local/search/keyword.json");
+  u2.searchParams.set("query", regionName);
+  u2.searchParams.set("size", "1");
+  const r2 = await fetch(u2, { headers: { Authorization: `KakaoAK ${kakaoKey}` } });
+  if (!r2.ok) { const err = new Error(`kakao ${r2.status}`); err.status = r2.status; throw err; }
+  const d2 = ((await r2.json()).documents || [])[0];
+  return d2 ? { lat: Number(d2.y), lng: Number(d2.x) } : null;
+}

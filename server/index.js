@@ -7,7 +7,7 @@ import { timingSafeEqual, createHash } from "node:crypto";
 
 import { recommendCourses } from "../src/recommend.js";
 import { describeCourse, llmEnabled } from "../src/llm.js";
-import { fetchRegionPlaces, fetchNearbyPlaces, naverBlog, naverImage, naverLocal, kakaoCoord2Region } from "../src/sources.js";
+import { fetchRegionPlaces, fetchNearbyPlaces, kakaoRegionCenter, naverBlog, naverImage, naverLocal, kakaoCoord2Region } from "../src/sources.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..");
@@ -286,6 +286,9 @@ app.post("/api/recommend", async function (req, res) {
     const budget = ["value", "premium"].includes(body.budget) ? body.budget : "normal";
     const openNow = !!body.openNow;
     const hour = Number.isInteger(body.hour) ? body.hour : new Date().getHours();
+    const daypart = body.daypart === "morning" ? "morning"
+      : body.daypart === "afternoon" ? "afternoon"
+      : (hour < 12 ? "morning" : "afternoon");
     const useWeather = !!body.weather;
     const excludeKeys = Array.isArray(body.excludePlaces) ? body.excludePlaces : [];
     const useLlm = !!body.useLlm;
@@ -318,6 +321,7 @@ app.post("/api/recommend", async function (req, res) {
       excludeCategories: [...excludeCategories], excludeKeys,
       seedOffset: Number.isInteger(body.seed) ? body.seed : 0,
       count: 3,
+      daypart,
     });
     if (weather) result.weather = weather;
 
@@ -402,23 +406,31 @@ app.get("/api/region-from-coords", async function (req, res) {
 app.get("/api/nearby", async function (req, res) {
   try {
     if (!liveEnabled) return res.status(400).json({ error: "서버에 검색 키가 없어요." });
-    const lat = Number(req.query.lat);
-    const lng = Number(req.query.lng);
+    let lat = Number(req.query.lat);
+    let lng = Number(req.query.lng);
+    let region = (req.query.region || "").trim() || null;
+    // 수동 지역 선택: 좌표가 없고 지역명이 오면 지오코딩으로 중심좌표 사용
+    if ((!Number.isFinite(lat) || !Number.isFinite(lng)) && region) {
+      const c = await kakaoRegionCenter(region, KAKAO_KEY);
+      if (!c) return res.status(404).json({ error: "그 지역의 위치를 찾지 못했어요." });
+      lat = c.lat; lng = c.lng;
+    }
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) return res.status(400).json({ error: "좌표가 올바르지 않아요." });
     const radius = Math.min(Math.max(Number(req.query.radius) || 1500, 300), 5000);
 
     let places = await fetchNearbyPlaces(lat, lng, KAKAO_KEY, radius);
     places = places.slice(0, 24).map((p) => ({ ...p, categoryLabel: CATEGORY_LABEL[p.category] || p.category }));
 
-    // 현재 지역(시/도·구) 추정
-    let region = null;
-    try {
-      const r = await kakaoCoord2Region(lat, lng, KAKAO_KEY);
-      if (r) {
-        const sido = SIDO_NAME_MAP[r.sido1] || String(r.sido1 || "").replace(/(특별자치시|특별자치도|특별시|광역시|도)$/, "");
-        region = `${sido} ${r.region2 || ""}`.trim();
-      }
-    } catch {}
+    // 지역명이 없으면(자동 위치) 좌표로 추정
+    if (!region) {
+      try {
+        const r = await kakaoCoord2Region(lat, lng, KAKAO_KEY);
+        if (r) {
+          const sido = SIDO_NAME_MAP[r.sido1] || String(r.sido1 || "").replace(/(특별자치시|특별자치도|특별시|광역시|도)$/, "");
+          region = `${sido} ${r.region2 || ""}`.trim();
+        }
+      } catch {}
+    }
 
     // 대표 사진 보강 (상위 일부, 네이버 키 있을 때)
     if (naverEnabled) {
