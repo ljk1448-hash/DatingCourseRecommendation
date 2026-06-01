@@ -450,6 +450,19 @@ app.get("/api/nearby", async function (req, res) {
   }
 });
 
+// 직접 설치용 APK 다운로드 (downloads/app-release.apk → /app-release.apk)
+app.get("/app-release.apk", function (req, res) {
+  const apk = join(ROOT, "downloads", "app-release.apk");
+  res.sendFile(apk, {
+    headers: {
+      "Content-Type": "application/vnd.android.package-archive",
+      "Content-Disposition": "attachment; filename=\"date-course.apk\"",
+    },
+  }, function (err) {
+    if (err && !res.headersSent) res.status(404).send("apk not found");
+  });
+});
+
 // 프론트엔드 정적 서빙
 app.use(express.static(join(ROOT, "web")));
 

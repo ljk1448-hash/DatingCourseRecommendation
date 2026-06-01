@@ -1,0 +1,6 @@
+# 이 파일을 복사해서 android/key.properties 로 저장하고 값을 채우세요. (key.properties 는 git에 안 올라갑니다)
+# 경로는 역슬래시 대신 슬래시(/)로! (예: C:/Users/GOOD/keys/datecourse.keystore)
+storeFile=C:/Users/GOOD/keys/datecourse.keystore
+storePassword=여기에_키스토어_비밀번호
+keyAlias=datecourse
+keyPassword=여기에_키_비밀번호
