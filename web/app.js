@@ -29,6 +29,10 @@ function escapeHtml(s) {
   });
 }
 
+function catEmoji(cat) {
+  return ({ meal: "🍽️", cafe: "☕", dessert: "🍰", bar: "🍷", activity: "🎯", culture: "🎨", walk: "🌳", nightview: "🌃" })[cat] || "📍";
+}
+
 function distanceText(km) {
   if (km <= 2) return `가깝게 · 약 ${km}km`;
   if (km <= 4) return `도보 중심 · 약 ${km}km`;
@@ -38,6 +42,7 @@ function distanceText(km) {
 }
 
 async function init() {
+  requestLocationOnStartup(); // 서버 응답과 무관하게 앱 시작 즉시 권한 요청
   try {
     state.meta = await getMeta();
   } catch {
@@ -106,7 +111,6 @@ async function init() {
   updateOnline();
   setActiveTab("home");
   updateSavedCount();
-  requestLocationOnStartup();
   await restoreSession();
 }
 
@@ -218,8 +222,8 @@ function nearItemHtml(p, region, wishKeys) {
   const rg = p.region || region || "";
   const dist = p.distance != null ? (p.distance >= 1000 ? `${(p.distance / 1000).toFixed(1)}km` : `${p.distance}m`) : "";
   const thumb = p.image && p.image.thumb
-    ? `<img class="near-thumb" src="${p.image.thumb}" alt="${escapeHtml(p.name)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none'">`
-    : `<div class="near-thumb"></div>`;
+    ? `<img class="near-thumb" src="${p.image.thumb}" alt="${escapeHtml(p.name)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.outerHTML='<div class=&quot;near-thumb ph&quot;>${catEmoji(p.category)}</div>'">`
+    : `<div class="near-thumb ph">${catEmoji(p.category)}</div>`;
   const wished = wishKeys ? wishKeys.has(placeKey({ name: p.name, region: rg })) : false;
   const phone = p.phone ? String(p.phone).replace(/[^0-9+\-]/g, "") : "";
   return `<div class="near-item">
@@ -473,8 +477,10 @@ async function requestLocationOnStartup() {
   const G = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Geolocation;
   if (!G) return;
   try {
-    const st = await G.checkPermissions();
-    if (st && (st.location === "prompt" || st.location === "prompt-with-rationale")) {
+    let perm = null;
+    try { perm = await G.checkPermissions(); } catch {}
+    const loc = perm && perm.location;
+    if (!loc || loc === "prompt" || loc === "prompt-with-rationale") {
       await G.requestPermissions();
     }
   } catch {}
@@ -623,8 +629,8 @@ function renderCourse(course, homeRegion, savedSigs, visitedKeys, wishKeys) {
       const visited = visitedKeys ? visitedKeys.has(placeKey({ name: s.name, region: s.region || homeRegion })) : false;
       const wished = wishKeys ? wishKeys.has(placeKey({ name: s.name, region: s.region || homeRegion })) : false;
       const thumb = s.image && s.image.thumb
-        ? `<a class="stop-thumb" href="${s.image.link || s.image.thumb}" target="_blank" rel="noopener"><img src="${s.image.thumb}" alt="${escapeHtml(s.name)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.stop-thumb')?.remove()"></a>`
-        : "";
+        ? `<a class="stop-thumb" href="${s.image.link || s.image.thumb}" target="_blank" rel="noopener"><img src="${s.image.thumb}" alt="${escapeHtml(s.name)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.stop-thumb')?.classList.add('ph'); this.remove();"></a>`
+        : `<div class="stop-thumb ph">${catEmoji(s.category)}</div>`;
       const phoneDigits = s.phone ? String(s.phone).replace(/[^0-9+-]/g, "") : "";
       const attrs = `data-name="${escapeHtml(s.name)}" data-region="${escapeHtml(s.region || homeRegion)}"`;
       return `

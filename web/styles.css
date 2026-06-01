@@ -425,3 +425,9 @@ body.nearby-mode { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
 .near-region { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
 .near-region select { flex: 1 1 40%; min-width: 0; padding: 9px 10px; border: 1.5px solid var(--line); border-radius: 10px; font-size: 13px; background: #fff; color: var(--ink); }
 .near-region .nf { flex: 1 1 100%; background: var(--rose-soft); border-color: var(--rose); color: var(--rose-deep); }
+
+/* 썸네일 없을 때 카테고리 아이콘 자리표시 */
+.stop-thumb.ph, .near-thumb.ph {
+  display: flex; align-items: center; justify-content: center;
+  font-size: 30px; background: var(--rose-soft);
+}

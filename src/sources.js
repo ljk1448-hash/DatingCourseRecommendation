@@ -186,14 +186,18 @@ export async function naverImage(query, naverId, naverSecret, matchName) {
   const data = await res.json();
   const items = data.items || [];
   if (!items.length) return null;
-  // 가게명과 무관한 엉뚱한 사진 방지: 이미지 제목에 가게명(가장 긴 토큰)이 들어간 것만 채택
+  // 가게명 토큰이 제목에 든 이미지를 우선 채택(엉뚱 사진 방지), 못 찾으면 첫 결과라도 표시
   if (matchName) {
     const norm = (x) => stripHtml(String(x || "")).replace(/[\s·,.\-_/()]+/g, "").toLowerCase();
-    const token = stripHtml(matchName).split(/\s+/).filter((t) => t.length >= 2).sort((a, b) => b.length - a.length)[0] || "";
-    const key = norm(token);
-    if (key.length >= 2) {
-      const hit = items.find((it) => norm(it.title).includes(key));
-      return hit ? { thumb: hit.thumbnail || hit.link, link: hit.link } : null;
+    const keys = stripHtml(matchName)
+      .split(/\s+/)
+      .filter((t) => t.length >= 2)
+      .map((t) => t.replace(/(본점|지점|직영점|\d+호점|점)$/, "")) // 지점/본점 접미사 제거
+      .map(norm)
+      .filter((k) => k.length >= 2);
+    if (keys.length) {
+      const hit = items.find((it) => { const t = norm(it.title); return keys.some((k) => t.includes(k)); });
+      if (hit) return { thumb: hit.thumbnail || hit.link, link: hit.link };
     }
   }
   const it = items[0];
