@@ -106,6 +106,7 @@ async function init() {
   updateOnline();
   setActiveTab("home");
   updateSavedCount();
+  requestLocationOnStartup();
   await restoreSession();
 }
 
@@ -465,6 +466,18 @@ async function getPosition() {
   if (!navigator.geolocation) throw new Error("no-geolocation");
   return await new Promise((resolve, reject) =>
     navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000, enableHighAccuracy: true }));
+}
+
+// 앱 첫 실행 시 위치 권한 미리 요청 (네이티브)
+async function requestLocationOnStartup() {
+  const G = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Geolocation;
+  if (!G) return;
+  try {
+    const st = await G.checkPermissions();
+    if (st && (st.location === "prompt" || st.location === "prompt-with-rationale")) {
+      await G.requestPermissions();
+    }
+  } catch {}
 }
 
 async function useCurrentLocation() {
