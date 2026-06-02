@@ -194,7 +194,7 @@ export async function naverImage(query, naverId, naverSecret, matchName) {
   if (!naverId || !naverSecret) return null;
   const url = new URL("https://openapi.naver.com/v1/search/image");
   url.searchParams.set("query", query);
-  url.searchParams.set("display", "5");
+  url.searchParams.set("display", "10");
   url.searchParams.set("sort", "sim");
   url.searchParams.set("filter", "all");
   const res = await fetch(url, {
@@ -204,18 +204,23 @@ export async function naverImage(query, naverId, naverSecret, matchName) {
   const data = await res.json();
   const items = data.items || [];
   if (!items.length) return null;
-  // 가게명 토큰이 제목에 든 이미지를 우선 채택(엉뚱 사진 방지), 못 찾으면 첫 결과라도 표시
+  // 가게명이 제목에 들어간 이미지만 채택. 매칭 없으면 표시 안 함(엉뚱 사진 방지 → 프론트에서 카테고리 아이콘)
   if (matchName) {
     const norm = (x) => stripHtml(String(x || "")).replace(/[\s·,.\-_/()]+/g, "").toLowerCase();
-    const keys = stripHtml(matchName)
-      .split(/\s+/)
-      .filter((t) => t.length >= 2)
-      .map((t) => t.replace(/(본점|지점|직영점|\d+호점|점)$/, "")) // 지점/본점 접미사 제거
-      .map(norm)
-      .filter((k) => k.length >= 2);
-    if (keys.length) {
-      const hit = items.find((it) => { const t = norm(it.title); return keys.some((k) => t.includes(k)); });
-      if (hit) return { thumb: hit.thumbnail || hit.link, link: hit.link };
+    const keys = new Set();
+    const full = norm(matchName);
+    if (full.length >= 2) keys.add(full);
+    for (let t of stripHtml(matchName).split(/\s+/)) {
+      t = t.replace(/(본점|지점|직영점|\d+호점|점)$/, ""); // 지점/본점 접미사 제거
+      const k = norm(t);
+      if (k.length >= 2) keys.add(k);
+      const core = norm(t.replace(/[0-9\-]+$/, "")); // 끝의 숫자/하이픈 제거 (르뺑99-1 → 르뺑)
+      if (core.length >= 2) keys.add(core);
+    }
+    const arr = [...keys];
+    if (arr.length) {
+      const hit = items.find((it) => { const t = norm(it.title); return arr.some((k) => t.includes(k)); });
+      return hit ? { thumb: hit.thumbnail || hit.link, link: hit.link } : null;
     }
   }
   const it = items[0];
