@@ -34,6 +34,8 @@ function escapeHtml(s) {
   });
 }
 
+const ic = (n) => `<svg class="ic" aria-hidden="true"><use href="#i-${n}"></use></svg>`;
+
 function catEmoji(cat) {
   return ({ meal: "🍽️", cafe: "☕", dessert: "🍰", bar: "🍷", activity: "🎯", culture: "🎨", walk: "🌳", nightview: "🌃" })[cat] || "📍";
 }
@@ -276,8 +278,8 @@ function nearItemHtml(p, region, wishKeys) {
       <div class="near-name"><a href="${p.url || kmap.searchUrl(p.name)}" target="_blank" rel="noopener">${escapeHtml(p.name)}</a></div>
       <div class="near-addr">${escapeHtml(p.address || p.categoryName || "")}</div>
       <div class="near-actions">
-        <a class="act act-go" href="${kmap.directionsUrl(p)}" target="_blank" rel="noopener">🧭 길찾기</a>
-        ${phone ? `<a class="act" href="tel:${phone}">📞 전화</a>` : ""}
+        <a class="act act-go" href="${kmap.directionsUrl(p)}" target="_blank" rel="noopener">${ic("navigation")} 길찾기</a>
+        ${phone ? `<a class="act" href="tel:${phone}">${ic("phone")} 전화</a>` : ""}
         <button class="act act-wish ${wished ? "on" : ""}" type="button" data-action="wish" data-name="${escapeHtml(p.name)}" data-region="${escapeHtml(rg)}">${wished ? "💛 찜" : "🤍 찜"}</button>
       </div>
     </div>
@@ -702,7 +704,7 @@ async function renderResults(data) {
     : "";
   const st = data.courses[0] && data.courses[0].start;
   const en = data.courses[0] && data.courses[0].end;
-  const head = `<div class="result-head">${data.region} · 추천 코스 ${data.courses.length}개 ${wx}${st ? ` · 📍 ${escapeHtml(st.name)} 출발` : ""}${en ? ` · 🏁 ${escapeHtml(en.name)} 도착` : ""}</div>`;
+  const head = `<div class="result-head">${data.region} · 추천 코스 ${data.courses.length}개 ${wx}${st ? ` · ${ic("pin")} ${escapeHtml(st.name)} 출발` : ""}${en ? ` · ${ic("flag")} ${escapeHtml(en.name)} 도착` : ""}</div>`;
   results.innerHTML = head + data.courses.map((c) => renderCourse(c, data.region, savedSigs, visitedKeys, wishKeys)).join("");
   results.scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -752,24 +754,24 @@ function renderCourse(course, homeRegion, savedSigs, visitedKeys, wishKeys) {
           <div class="stop-rail"><div class="stop-dot">${i + 1}</div><div class="stop-line"></div></div>
           <div class="stop-body">
             ${thumb}
-            <div class="stop-cat"><span class="stop-time">🕒 ${fmtTime(arrivals[i])}</span>${s.categoryLabel}${regionTag}</div>
+            <div class="stop-cat"><span class="stop-time">${ic("clock")} ${fmtTime(arrivals[i])}</span>${s.categoryLabel}${regionTag}</div>
             <div class="stop-name"><a href="${kmap.searchUrl(s.name)}" target="_blank" rel="noopener">${s.name}</a></div>
             <div class="stop-desc">${s.description || ""}</div>
             <div class="stop-tags">${tags}</div>
             ${blog}
             <div class="stop-actions">
-              <a class="act act-go" href="${kmap.directionsUrl(s)}" target="_blank" rel="noopener">🧭 길찾기</a>
+              <a class="act act-go" href="${kmap.directionsUrl(s)}" target="_blank" rel="noopener">${ic("navigation")} 길찾기</a>
               <button class="act act-like ${s.liked ? "on" : ""}" type="button" data-action="like" data-sig="${sig}" data-idx="${i}">${s.liked ? "👍 좋아요" : "👍"}</button>
               <button class="act act-wish ${wished ? "on" : ""}" type="button" data-action="wish" ${attrs}>${wished ? "💛 찜" : "🤍 찜"}</button>
-              <button class="act act-more" type="button" data-action="more">⋯</button>
+              <button class="act act-more" type="button" data-action="more">${ic("dots")}</button>
             </div>
             <div class="stop-more" hidden>
-              <a class="act" href="${s.url || kmap.searchUrl(s.name)}" target="_blank" rel="noopener">🕒 영업시간</a>
-              ${phoneDigits ? `<a class="act" href="tel:${phoneDigits}">📞 전화</a>` : ""}
-              <a class="act" href="${kmap.naverBlogSearchUrl(s.name, s.region || homeRegion)}" target="_blank" rel="noopener">📝 네이버 후기</a>
-              <a class="act" href="${kmap.naverReservationUrl(s.name, s.region || homeRegion)}" target="_blank" rel="noopener">📅 예약</a>
+              <a class="act" href="${s.url || kmap.searchUrl(s.name)}" target="_blank" rel="noopener">${ic("clock")} 영업시간</a>
+              ${phoneDigits ? `<a class="act" href="tel:${phoneDigits}">${ic("phone")} 전화</a>` : ""}
+              <a class="act" href="${kmap.naverBlogSearchUrl(s.name, s.region || homeRegion)}" target="_blank" rel="noopener">${ic("message")} 네이버 후기</a>
+              <a class="act" href="${kmap.naverReservationUrl(s.name, s.region || homeRegion)}" target="_blank" rel="noopener">${ic("calendar")} 예약</a>
               <button class="act ${visited ? "on" : ""}" type="button" data-action="visit" ${attrs}>${visited ? "✓ 다녀옴" : "다녀옴"}</button>
-              <button class="act" type="button" data-action="swap" data-sig="${sig}" data-idx="${i}">🔄 바꾸기</button>
+              <button class="act" type="button" data-action="swap" data-sig="${sig}" data-idx="${i}">${ic("refresh")} 바꾸기</button>
             </div>
           </div>
         </div>`;
@@ -783,9 +785,9 @@ function renderCourse(course, homeRegion, savedSigs, visitedKeys, wishKeys) {
       <div class="course-summary ${course.llm ? "ai" : ""}">${course.summary}</div>
       <div class="timeline">${stops}</div>
       <div class="course-actions">
-        <button class="btn-soft" type="button" data-action="map" data-sig="${sig}">🗺️ 지도</button>
+        <button class="btn-soft" type="button" data-action="map" data-sig="${sig}">${ic("map")} 지도</button>
         <button class="btn-soft btn-save ${saved ? "on" : ""}" type="button" data-action="save" data-sig="${sig}">${saved ? "♥ 저장됨" : "♡ 저장"}</button>
-        <button class="btn-soft" type="button" data-action="share" data-sig="${sig}">📤 공유</button>
+        <button class="btn-soft" type="button" data-action="share" data-sig="${sig}">${ic("share")} 공유</button>
       </div>
     </div>`;
 }
@@ -957,7 +959,7 @@ async function swapStop(sig, idx, btn) {
       alert((r && r.message) || "바꿀 장소가 없어요.");
     }
   } catch { alert("교체 중 오류가 났어요."); }
-  finally { if (btn) { btn.disabled = false; btn.textContent = "🔄 바꾸기"; } }
+  finally { if (btn) { btn.disabled = false; btn.innerHTML = `${ic("refresh")} 바꾸기`; } }
 }
 function recomputeCourse(course) {
   let totalKm = 0, totalMin = 0;
