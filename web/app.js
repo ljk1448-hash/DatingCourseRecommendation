@@ -48,12 +48,7 @@ function dayStartMin(daypart) {
   return ({ morning: 11, afternoon: 14, evening: 18 }[daypart] || 13) * 60;
 }
 
-function renderHomeHint() {
-  const r = $("#results");
-  if (r && !r.innerHTML.trim()) {
-    r.innerHTML = `<div class="home-hint">💡 <b>지역</b>과 <b>분위기</b>를 고르고 아래 <b>💕 코스 추천받기</b>를 눌러보세요.<br>고르기 귀찮다면 <b>🎲</b>로 아무거나 받아도 돼요!</div>`;
-  }
-}
+function renderHomeHint() { /* 안내는 index 상단 배너(#homeHint)로 이동 */ }
 
 function distanceText(km) {
   if (km <= 2) return `가깝게 · 약 ${km}km`;
@@ -147,7 +142,6 @@ async function init() {
   updateSavedCount();
   await restoreSession();
   await openSharedCourse();
-  renderHomeHint();
 }
 
 async function openSharedCourse() {
