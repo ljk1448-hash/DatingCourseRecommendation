@@ -375,6 +375,7 @@ app.post("/api/swap", async function (req, res) {
       category: chosen.category, categoryLabel: CATEGORY_LABEL[chosen.category] || chosen.category,
       lat: chosen.lat, lng: chosen.lng, tags: [...(chosen.tags || [])],
       address: chosen.address, description: chosen.description, avgMinutes: chosen.avgMinutes || 60,
+      url: chosen.url || "",
     };
     await enrichStops([{ stops: [stop] }], region);
     res.json({ place: stop });

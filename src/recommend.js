@@ -155,6 +155,7 @@ function orderAndSummarize(places, desiredTags, mode = "walk", daypart = "aftern
       description: p.description,
       avgMinutes: p.avgMinutes,
       blog: p.blog || null,
+      url: p.url || "",
       legKm,
       legMin,
     });
@@ -231,6 +232,7 @@ export function recommendCourses({
   const allow = regions && regions.length ? new Set(regions) : (region ? new Set([region]) : null);
   const exCats = new Set(excludeCategories || []);
   if (daypart === "morning") { exCats.add("nightview"); exCats.add("bar"); } // 오전엔 야경·술 제외
+  if (daypart === "evening") { exCats.add("culture"); } // 저녁 시작이면 일찍 닫는 전시·문화 제외(추정)
   const exKeys = new Set(excludeKeys || []);
   const candidates = places.filter(
     (p) =>

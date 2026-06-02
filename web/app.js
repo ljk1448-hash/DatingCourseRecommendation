@@ -698,6 +698,7 @@ function renderCourse(course, homeRegion, savedSigs, visitedKeys, wishKeys) {
               <button class="act act-more" type="button" data-action="more">⋯</button>
             </div>
             <div class="stop-more" hidden>
+              <a class="act" href="${s.url || kmap.searchUrl(s.name)}" target="_blank" rel="noopener">🕒 영업시간</a>
               ${phoneDigits ? `<a class="act" href="tel:${phoneDigits}">📞 전화</a>` : ""}
               <a class="act" href="${kmap.naverBlogSearchUrl(s.name, s.region || homeRegion)}" target="_blank" rel="noopener">📝 네이버 후기</a>
               <button class="act ${visited ? "on" : ""}" type="button" data-action="visit" ${attrs}>${visited ? "✓ 다녀옴" : "다녀옴"}</button>
