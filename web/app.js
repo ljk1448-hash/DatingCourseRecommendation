@@ -15,6 +15,9 @@ const state = {
   meta: null,
   daypart: "morning",
   start: null,
+  startAsStop: false,
+  end: null,
+  endAsStop: false,
   nearbyData: null,
   nearbyFilter: "all",
 };
@@ -133,9 +136,11 @@ async function init() {
   $("#recommendBtn").addEventListener("click", recommend);
   $("#locBtn")?.addEventListener("click", useCurrentLocation);
   $("#randomBtn")?.addEventListener("click", randomRecommend);
-  $("#startSearchBtn")?.addEventListener("click", doStartSearch);
-  $("#startInput")?.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); doStartSearch(); } });
-  $("#startLocBtn")?.addEventListener("click", useStartCurrentLocation);
+  $("#startSearchBtn")?.addEventListener("click", () => doPointSearch("start"));
+  $("#startInput")?.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); doPointSearch("start"); } });
+  $("#startLocBtn")?.addEventListener("click", () => usePointCurrentLocation("start"));
+  $("#endSearchBtn")?.addEventListener("click", () => doPointSearch("end"));
+  $("#endInput")?.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); doPointSearch("end"); } });
 
   // 전역 액션 위임 (저장/지도/시트 닫기 등)
   document.addEventListener("click", onAction);
@@ -365,6 +370,7 @@ function snapshotUI() {
     budget: state.budget,
     daypart: state.daypart,
     start: state.start,
+    end: state.end,
     distance: +$("#distance").value,
     stops: +$("#stops").value,
     includeNight: $("#includeNight").checked,
@@ -397,7 +403,8 @@ function restoreUI(ui) {
     state.daypart = ui.daypart;
     document.querySelectorAll("#daypart .seg").forEach((b) => b.classList.toggle("selected", b.dataset.daypart === ui.daypart));
   }
-  if (ui.start) setStart(ui.start);
+  if (ui.start) setPoint("start", ui.start);
+  if (ui.end) setPoint("end", ui.end);
   if (Number.isFinite(ui.distance)) { const d = $("#distance"); d.value = String(ui.distance); d.dispatchEvent(new Event("input")); }
   if (Number.isFinite(ui.stops)) { const st = $("#stops"); st.value = String(ui.stops); st.dispatchEvent(new Event("input")); }
   if ("includeNight" in ui) $("#includeNight").checked = !!ui.includeNight;
@@ -543,44 +550,57 @@ async function useCurrentLocation() {
   } finally { done(); }
 }
 
-// ── 출발지 지정 ──
-async function doStartSearch() {
-  const q = ($("#startInput").value || "").trim();
+// ── 출발지/도착지 지정 ──
+const POINT_META = {
+  start: { icon: "📍", label: "출발", toggle: "출발지도 코스 첫 장소로 포함" },
+  end: { icon: "🏁", label: "도착", toggle: "도착지도 코스 마지막 장소로 포함" },
+};
+async function doPointSearch(kind) {
+  const q = ($(`#${kind}Input`).value || "").trim();
   if (!q) return;
   const region = [...state.regions][0] || state.sido || "";
-  const box = $("#startResults");
+  const box = $(`#${kind}Results`);
   box.hidden = false;
   box.innerHTML = `<div class="start-loading">검색 중…</div>`;
   try {
     const data = await searchPlaces(q, region);
     const ps = (data && data.places) || [];
     if (!ps.length) { box.innerHTML = `<div class="start-loading">결과가 없어요.</div>`; return; }
-    state._startCands = ps;
-    box.innerHTML = ps.map((p, i) => `<button type="button" class="start-item" data-action="start-pick" data-i="${i}"><b>${escapeHtml(p.name)}</b><small>${escapeHtml(p.address || p.category || "")}</small></button>`).join("");
+    state._cands = state._cands || {};
+    state._cands[kind] = ps;
+    box.innerHTML = ps.map((p, i) => `<button type="button" class="start-item" data-action="point-pick" data-kind="${kind}" data-i="${i}"><b>${escapeHtml(p.name)}</b><small>${escapeHtml(p.address || p.category || "")}</small></button>`).join("");
   } catch { box.innerHTML = `<div class="start-loading">검색에 실패했어요. 잠시 후 다시.</div>`; }
 }
-function pickStart(i) {
-  const p = (state._startCands || [])[i];
-  if (p) setStart({ name: p.name, lat: p.lat, lng: p.lng });
+function pickPoint(kind, i) {
+  const p = ((state._cands || {})[kind] || [])[i];
+  if (p) setPoint(kind, { name: p.name, lat: p.lat, lng: p.lng, category: p.category, address: p.address });
 }
-function setStart(p) {
-  state.start = p;
-  $("#startResults").hidden = true;
-  $("#startInput").value = "";
-  const c = $("#startChosen");
+function setPoint(kind, p) {
+  state[kind] = p;
+  state[`${kind}AsStop`] = false;
+  $(`#${kind}Results`).hidden = true;
+  $(`#${kind}Input`).value = "";
+  const m = POINT_META[kind];
+  const c = $(`#${kind}Chosen`);
   c.hidden = false;
-  c.innerHTML = `📍 출발: <b>${escapeHtml(p.name)}</b> <button type="button" class="start-clear" data-action="start-clear">✕</button>`;
+  const toggle = p.category
+    ? `<label class="start-asstop"><input type="checkbox" id="${kind}AsStop" /> ${m.toggle}</label>`
+    : "";
+  c.innerHTML = `<div class="start-chosen-row">${m.icon} ${m.label}: <b>${escapeHtml(p.name)}</b> <button type="button" class="start-clear" data-action="point-clear" data-kind="${kind}">✕</button></div>${toggle}`;
+  const cb = $(`#${kind}AsStop`);
+  if (cb) cb.addEventListener("change", () => { state[`${kind}AsStop`] = cb.checked; });
 }
-function clearStart() {
-  state.start = null;
-  const c = $("#startChosen"); c.hidden = true; c.innerHTML = "";
+function clearPoint(kind) {
+  state[kind] = null;
+  state[`${kind}AsStop`] = false;
+  const c = $(`#${kind}Chosen`); c.hidden = true; c.innerHTML = "";
 }
-async function useStartCurrentLocation() {
-  const btn = $("#startLocBtn");
+async function usePointCurrentLocation(kind) {
+  const btn = $(`#${kind}LocBtn`);
   if (btn) btn.disabled = true;
   try {
     const pos = await getPosition();
-    setStart({ name: "현재 위치", lat: pos.coords.latitude, lng: pos.coords.longitude });
+    setPoint(kind, { name: "현재 위치", lat: pos.coords.latitude, lng: pos.coords.longitude });
   } catch { alert("위치 권한이 필요해요. 휴대폰 설정에서 허용해 주세요."); }
   finally { if (btn) btn.disabled = false; }
 }
@@ -648,7 +668,10 @@ async function recommend() {
     mode: state.transport,
     budget: state.budget,
     daypart: state.daypart,
-    start: state.start ? { lat: state.start.lat, lng: state.start.lng } : undefined,
+    start: state.start ? { lat: state.start.lat, lng: state.start.lng, name: state.start.name, categoryText: state.start.category, address: state.start.address } : undefined,
+    includeStart: !!(state.start && state.startAsStop && state.start.category),
+    end: state.end ? { lat: state.end.lat, lng: state.end.lng, name: state.end.name, categoryText: state.end.category, address: state.end.address } : undefined,
+    includeEnd: !!(state.end && state.endAsStop && state.end.category),
     distanceKm: +$("#distance").value,
     stops: +$("#stops").value,
     includeNight: $("#includeNight").checked,
@@ -664,7 +687,7 @@ async function recommend() {
 
   try {
     const data = await apiRecommend(body);
-    if (data.courses) data.courses.forEach((c) => { c.start = state.start || null; });
+    if (data.courses) data.courses.forEach((c) => { c.start = state.start || null; c.end = state.end || null; });
     await renderResults(data);
     session.save({ ui: snapshotUI(), data });
     if (data.courses && data.courses[0]) recents.add(data.courses[0]);
@@ -688,7 +711,8 @@ async function renderResults(data) {
     ? `<span class="wx">${data.weather.label === "맑음" ? "☀️ 맑음" : (data.weather.label === "눈" ? "🌨️ 눈·실내 위주" : "🌧️ 비·실내 위주")}</span>`
     : "";
   const st = data.courses[0] && data.courses[0].start;
-  const head = `<div class="result-head">${data.region} · 추천 코스 ${data.courses.length}개 ${wx}${st ? ` · 📍 ${escapeHtml(st.name)} 출발` : ""}</div>`;
+  const en = data.courses[0] && data.courses[0].end;
+  const head = `<div class="result-head">${data.region} · 추천 코스 ${data.courses.length}개 ${wx}${st ? ` · 📍 ${escapeHtml(st.name)} 출발` : ""}${en ? ` · 🏁 ${escapeHtml(en.name)} 도착` : ""}</div>`;
   results.innerHTML = head + data.courses.map((c) => renderCourse(c, data.region, savedSigs, visitedKeys, wishKeys)).join("");
   results.scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -886,8 +910,8 @@ function onAction(e) {
   if (a === "near-course") return nearbyToCourse();
   if (a === "near-region-toggle") { const pk = $("#nearRegionPicker"); pk.hidden = !pk.hidden; return; }
   if (a === "near-region-go") { return loadNearbyByRegion(`${$("#nearSido").value} ${$("#nearGu").value}`.trim()); }
-  if (a === "start-pick") return pickStart(Number(el.dataset.i));
-  if (a === "start-clear") return clearStart();
+  if (a === "point-pick") return pickPoint(el.dataset.kind, Number(el.dataset.i));
+  if (a === "point-clear") return clearPoint(el.dataset.kind);
   if (a === "more") return toggleMore(el);
 }
 

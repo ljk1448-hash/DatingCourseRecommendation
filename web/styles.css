@@ -475,3 +475,8 @@ body.nearby-mode { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
 @media (prefers-color-scheme: dark) {
   .start-row input, .start-item { background: var(--card); color: var(--ink); }
 }
+
+.start-chosen-row { display: flex; align-items: center; gap: 6px; }
+.start-asstop { display: flex; align-items: center; gap: 7px; margin-top: 8px; font-size: 13px; font-weight: 500; color: var(--ink); cursor: pointer; }
+.start-asstop input { width: 16px; height: 16px; accent-color: var(--rose); }
+.map-pin.map-end { background: #16a34a; }

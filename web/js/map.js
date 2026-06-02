@@ -44,6 +44,11 @@ export async function renderCourseMap(container, course, jsKey) {
     new kakao.maps.CustomOverlay({ position: sp, yAnchor: 2.1, map, content: `<div class="map-pin map-start">출발</div>` });
     bounds.extend(sp);
   }
+  if (course.end && Number.isFinite(course.end.lat) && Number.isFinite(course.end.lng)) {
+    const ep = new kakao.maps.LatLng(course.end.lat, course.end.lng);
+    new kakao.maps.CustomOverlay({ position: ep, yAnchor: 2.1, map, content: `<div class="map-pin map-end">도착</div>` });
+    bounds.extend(ep);
+  }
   new kakao.maps.Polyline({ map, path, strokeWeight: 4, strokeColor: "#ff5a7e", strokeOpacity: 0.9 });
   map.setBounds(bounds);
   return map;

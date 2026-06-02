@@ -24,6 +24,20 @@ const CATEGORY_LABEL = {
   meal: "식사", cafe: "카페", dessert: "디저트", bar: "술 한잔",
   activity: "액티비티", culture: "전시·문화", walk: "산책", nightview: "야경",
 };
+// 출발지(카카오 카테고리 텍스트)를 우리 카테고리로 추정
+const START_CAT_RULES = [
+  [/카페|커피|디저트|베이커리|브런치/, "cafe"],
+  [/술집|호프|포차|와인|이자카야|펍/, "bar"],
+  [/문화|전시|미술|박물|갤러리|공연|영화/, "culture"],
+  [/공원|산책|하천|둘레|명소|관광|전망|해변|호수/, "walk"],
+  [/체험|방탈출|클래스|공방|볼링|당구|노래/, "activity"],
+  [/음식|맛집|식당|한식|중식|일식|양식|고기|면|국밥|분식/, "meal"],
+];
+function mapStartCategory(text) {
+  for (const [re, cat] of START_CAT_RULES) if (re.test(text)) return cat;
+  return "meal";
+}
+const START_AVG = { meal: 70, cafe: 50, dessert: 45, bar: 80, activity: 80, culture: 80, walk: 60, nightview: 70 };
 // 카카오 행정구역(시/도) → 우리 짧은 이름
 const SIDO_NAME_MAP = {
   "서울특별시": "서울", "부산광역시": "부산", "대구광역시": "대구", "인천광역시": "인천",
@@ -313,6 +327,34 @@ app.post("/api/recommend", async function (req, res) {
       if (weather && weather.rainy) { excludeCategories.add("walk"); excludeCategories.add("nightview"); }
     }
 
+    let startAnchor = null, startStop = null;
+    const st0 = body.start;
+    if (st0 && Number.isFinite(Number(st0.lat)) && Number.isFinite(Number(st0.lng))) {
+      startAnchor = { lat: Number(st0.lat), lng: Number(st0.lng) };
+      if (body.includeStart && st0.name) {
+        const cat = mapStartCategory(String(st0.categoryText || ""));
+        startStop = {
+          id: "start", name: st0.name, region: primary, category: cat,
+          categoryLabel: CATEGORY_LABEL[cat] || cat, lat: startAnchor.lat, lng: startAnchor.lng,
+          tags: [], address: st0.address || "", description: String(st0.categoryText || ""),
+          avgMinutes: START_AVG[cat] || 60, url: st0.url || "",
+        };
+      }
+    }
+    let endAnchor = null, endStop = null;
+    const en0 = body.end;
+    if (en0 && Number.isFinite(Number(en0.lat)) && Number.isFinite(Number(en0.lng))) {
+      endAnchor = { lat: Number(en0.lat), lng: Number(en0.lng) };
+      if (body.includeEnd && en0.name) {
+        const ecat = mapStartCategory(String(en0.categoryText || ""));
+        endStop = {
+          id: "end", name: en0.name, region: primary, category: ecat,
+          categoryLabel: CATEGORY_LABEL[ecat] || ecat, lat: endAnchor.lat, lng: endAnchor.lng,
+          tags: [], address: en0.address || "", description: String(en0.categoryText || ""),
+          avgMinutes: START_AVG[ecat] || 60, url: en0.url || "",
+        };
+      }
+    }
     const result = recommendCourses({
       places, region: primary, regions: regionsList, tags,
       distanceKm: Number(distanceKm), stops: Number(stops),
@@ -321,8 +363,10 @@ app.post("/api/recommend", async function (req, res) {
       seedOffset: Number.isInteger(body.seed) ? body.seed : 0,
       count: 3,
       daypart,
-      start: body.start && Number.isFinite(Number(body.start.lat)) && Number.isFinite(Number(body.start.lng))
-        ? { lat: Number(body.start.lat), lng: Number(body.start.lng) } : null,
+      start: startAnchor,
+      startStop,
+      end: endAnchor,
+      endStop,
     });
     if (weather) result.weather = weather;
     result.daypart = daypart;

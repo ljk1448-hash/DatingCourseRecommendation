@@ -67,32 +67,44 @@ function matchScore(place, desiredTags, budget = "normal") {
 }
 
 /** 한 코스를 greedy 로 구성 */
-function buildCourse(candidates, { desiredTags, budgetKm, stops, includeNight, seedIndex, mode = "walk", budget = "normal", daypart = "afternoon", start = null }) {
+function buildCourse(candidates, { desiredTags, budgetKm, stops, includeNight, seedIndex, mode = "walk", budget = "normal", daypart = "afternoon", start = null, startStop = null, end = null, endStop = null }) {
   const caps = categoryCaps();
   const W_MATCH = 2;
   const W_DIST = mode === "car" ? 0.2 : 1.5;
+  const W_DETOUR = W_DIST; // 출발↔도착 경로에서 벗어나면 감점
 
   let pool = candidates
     .filter((p) => (includeNight ? true : !["nightview", "bar"].includes(p.category)))
+    .filter((p) => !(startStop && p.id === startStop.id) && !(endStop && p.id === endStop.id))
     .map((p) => ({ ...p, _score: matchScore(p, desiredTags, budget) }));
 
-  if (pool.length === 0) return null;
+  if (pool.length === 0) {
+    const fixed = [startStop, endStop].filter(Boolean);
+    return fixed.length ? orderAndSummarize(fixed, desiredTags, mode, daypart, !!startStop, !!endStop) : null;
+  }
 
   pool.sort((a, b) => b._score - a._score || a.id.localeCompare(b.id));
 
   const hasStart = start && Number.isFinite(start.lat) && Number.isFinite(start.lng);
+  const endCoords = endStop
+    ? { lat: endStop.lat, lng: endStop.lng }
+    : (end && Number.isFinite(end.lat) && Number.isFinite(end.lng) ? end : null);
   const chosen = [];
   const usedCat = {};
   let totalKm = 0;
 
-  // 출발지 없으면 점수 1위(seed)로 시작, 있으면 출발지에서 가까운 곳부터 채움
-  if (!hasStart) {
+  if (startStop) {
+    chosen.push(startStop);
+    usedCat[startStop.category] = (usedCat[startStop.category] || 0) + 1;
+  } else if (!hasStart) {
     const seed = pool[seedIndex % pool.length];
     chosen.push(seed);
     usedCat[seed.category] = 1;
   }
 
-  while (chosen.length < stops) {
+  const targetGreedy = Math.max(1, stops - (endStop ? 1 : 0)); // 도착지 포함 시 마지막 한 칸 비움
+
+  while (chosen.length < targetGreedy) {
     const from = chosen.length ? chosen[chosen.length - 1] : start;
     const scored = [];
     for (const cand of pool) {
@@ -101,13 +113,18 @@ function buildCourse(candidates, { desiredTags, budgetKm, stops, includeNight, s
       if (cnt >= (caps[cand.category] ?? 1)) continue;
       const km = from ? travelKm(from, cand) : 0;
       if (totalKm + km > budgetKm) continue;
-      scored.push({ cand, km, val: cand._score * W_MATCH - km * W_DIST });
+      let val = cand._score * W_MATCH - km * W_DIST;
+      if (endCoords && from) {
+        const detour = (km + travelKm(cand, endCoords)) - travelKm(from, endCoords);
+        val -= Math.max(0, detour) * W_DETOUR; // 도착지에서 멀어지는 우회 감점
+      }
+      scored.push({ cand, km, val });
     }
     if (!scored.length) break;
     scored.sort((a, b) => b.val - a.val);
     let pick = scored[0];
     if (chosen.length === 0 && hasStart) {
-      const topK = scored.slice(0, Math.min(6, scored.length)); // 출발지 기준 첫 정거장 다양화
+      const topK = scored.slice(0, Math.min(6, scored.length));
       pick = topK[seedIndex % topK.length];
     }
     chosen.push(pick.cand);
@@ -115,15 +132,26 @@ function buildCourse(candidates, { desiredTags, budgetKm, stops, includeNight, s
     totalKm += pick.km;
   }
 
-  return orderAndSummarize(chosen, desiredTags, mode, daypart);
+  if (endStop) chosen.push(endStop);
+
+  return orderAndSummarize(chosen, desiredTags, mode, daypart, !!startStop, !!endStop);
 }
 
 /** 선택된 장소들을 자연스러운 흐름(phase)으로 재정렬하고 코스 정보 생성 */
-function orderAndSummarize(places, desiredTags, mode = "walk", daypart = "afternoon") {
+function orderAndSummarize(places, desiredTags, mode = "walk", daypart = "afternoon", pinFirst = false, pinLast = false) {
   const PHASE = phaseMap(daypart);
-  const ordered = [...places].sort(
-    (a, b) => (PHASE[a.category] ?? 9) - (PHASE[b.category] ?? 9)
-  );
+  const byPhase = (a, b) => (PHASE[a.category] ?? 9) - (PHASE[b.category] ?? 9);
+  const arr = [...places];
+  let ordered;
+  if (pinFirst && pinLast && arr.length >= 2) {
+    ordered = [arr[0], ...arr.slice(1, -1).sort(byPhase), arr[arr.length - 1]]; // 출발/도착 고정, 중간만 시간대 순서
+  } else if (pinFirst) {
+    ordered = [arr[0], ...arr.slice(1).sort(byPhase)];
+  } else if (pinLast) {
+    ordered = [...arr.slice(0, -1).sort(byPhase), arr[arr.length - 1]];
+  } else {
+    ordered = arr.sort(byPhase);
+  }
 
   const stops = [];
   let totalKm = 0;
@@ -230,6 +258,9 @@ export function recommendCourses({
   count = 3,
   daypart = "afternoon",
   start = null,
+  startStop = null,
+  end = null,
+  endStop = null,
 }) {
   const allow = regions && regions.length ? new Set(regions) : (region ? new Set([region]) : null);
   const exCats = new Set(excludeCategories || []);
@@ -262,6 +293,9 @@ export function recommendCourses({
       budget,
       daypart,
       start,
+      startStop,
+      end,
+      endStop,
     });
     if (!course || course.stops.length < 2) continue;
     const sig = signature(course);

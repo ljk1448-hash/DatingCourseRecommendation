@@ -69,6 +69,16 @@
         <div id="startChosen" class="start-chosen" hidden></div>
       </div>
 
+      <div class="field">
+        <label>🏁 도착지 <small>(선택 · 출발↔도착 사이를 채움)</small></label>
+        <div class="start-row">
+          <input type="text" id="endInput" placeholder="역·가게·랜드마크 검색" autocomplete="off" />
+          <button type="button" class="mini-btn" id="endSearchBtn">검색</button>
+        </div>
+        <div id="endResults" class="start-results" hidden></div>
+        <div id="endChosen" class="start-chosen" hidden></div>
+      </div>
+
       <div class="field" id="distanceField">
         <label for="distance">이동 거리 조절 <span id="distanceLabel" class="pill">보통 · 약 5km</span></label>
         <input type="range" id="distance" min="1" max="20" step="1" value="5" />
