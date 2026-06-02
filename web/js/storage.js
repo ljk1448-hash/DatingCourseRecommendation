@@ -90,3 +90,45 @@ export const session = {
   load() { try { return JSON.parse(localStorage.getItem(SKEY)); } catch { return null; } },
   clear() { try { localStorage.removeItem(SKEY); } catch { /* 무시 */ } },
 };
+
+// 코스 → 공유 링크용 인코딩(유니코드 안전 base64url) / 디코딩
+function b64urlEncode(str) {
+  const b64 = btoa(unescape(encodeURIComponent(str)));
+  return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function b64urlDecode(s) {
+  s = s.replace(/-/g, "+").replace(/_/g, "/");
+  while (s.length % 4) s += "=";
+  return decodeURIComponent(escape(atob(s)));
+}
+export function encodeCourse(course) {
+  const slim = {
+    title: course.title, summary: course.summary, mode: course.mode,
+    totalKm: course.totalKm, totalMinutes: course.totalMinutes, daypart: course.daypart, region: course.region,
+    stops: (course.stops || []).map((s) => ({
+      name: s.name, region: s.region, category: s.category, categoryLabel: s.categoryLabel,
+      lat: s.lat, lng: s.lng, address: s.address, description: s.description,
+      tags: s.tags, avgMinutes: s.avgMinutes, legKm: s.legKm, legMin: s.legMin, phone: s.phone,
+    })),
+  };
+  try { return b64urlEncode(JSON.stringify(slim)); } catch { return ""; }
+}
+export function decodeCourse(str) {
+  try { const c = JSON.parse(b64urlDecode(str)); return (c && c.stops && c.stops.length) ? c : null; } catch { return null; }
+}
+
+// 최근 추천(최대 6개)
+const RKEY = "dc.recents.v1";
+function rread() { try { return JSON.parse(localStorage.getItem(RKEY)) || []; } catch { return []; } }
+function rwrite(l) { try { localStorage.setItem(RKEY, JSON.stringify(l)); } catch { /* 무시 */ } }
+export const recents = {
+  async list() { return rread(); },
+  async add(course) {
+    if (!course) return;
+    const sig = courseSignature(course);
+    let l = rread().filter((x) => x.sig !== sig);
+    l.unshift({ sig, at: Date.now(), course });
+    rwrite(l.slice(0, 6));
+  },
+  async clear() { rwrite([]); },
+};

@@ -9,8 +9,10 @@ import { travelKm, walkMinutes, driveMinutes } from "./geo.js";
 const PHASE_BY_DAYPART = {
   // 오전: 브런치(식사) → 카페/디저트 → 전시·액티비티 → 산책
   morning: { meal: 1, cafe: 2, dessert: 2, activity: 3, culture: 3, walk: 4, nightview: 5, bar: 5 },
-  // 오후/저녁: 카페·전시 → 액티비티·산책 → 식사(저녁) → 디저트 → 야경·술
+  // 오후: 카페·전시 → 액티비티·산책 → 식사(저녁) → 디저트 → 야경·술
   afternoon: { cafe: 1, culture: 1, activity: 2, walk: 2, meal: 3, dessert: 4, nightview: 5, bar: 5 },
+  // 저녁: 식사 → 카페/디저트 → 산책·전시 → 야경 → 술 한잔
+  evening: { meal: 1, cafe: 2, dessert: 2, walk: 3, culture: 3, activity: 3, nightview: 4, bar: 5 },
 };
 function phaseMap(daypart) {
   return PHASE_BY_DAYPART[daypart] || PHASE_BY_DAYPART.afternoon;

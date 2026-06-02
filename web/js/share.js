@@ -1,5 +1,6 @@
 // 코스 공유: 네이티브 공유시트(카톡 등) + 이미지 파일 저장/공유 (웹은 폴백)
 import { API_BASE } from "./config.js";
+import { encodeCourse } from "./storage.js";
 
 const APP_LINK = (API_BASE || (typeof location !== "undefined" ? location.origin : "")) + "/";
 
@@ -14,7 +15,7 @@ function capPlugin(name) {
 
 export async function shareCourse(course, region, url) {
   const text = courseToText(course, region);
-  const link = url || APP_LINK;
+  const link = url || `${APP_LINK}?c=${encodeCourse(course)}`;
   const Share = capPlugin("Share");
   if (Share) {
     try { await Share.share({ title: course.title, text: `${text}\n${link}`, url: link, dialogTitle: "코스 공유" }); return "shared"; }

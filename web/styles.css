@@ -431,3 +431,31 @@ body.nearby-mode { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
   display: flex; align-items: center; justify-content: center;
   font-size: 30px; background: var(--rose-soft);
 }
+
+/* 코스 도착 시각 배지 + 첫 화면 안내 */
+.stop-time { display: inline-block; background: var(--rose-soft); color: var(--rose-deep); font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 999px; margin-right: 6px; vertical-align: middle; }
+.home-hint { text-align: center; color: var(--muted); font-size: 14px; line-height: 1.75; padding: 26px 18px; background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); margin-top: 4px; }
+.home-hint b { color: var(--rose-deep); }
+
+/* ── 다크 모드 ── */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #f0e8ee;
+    --muted: #a99fb0;
+    --bg: #181420;
+    --card: #251f2d;
+    --line: #3a3340;
+    --rose-soft: #3c2632;
+    --shadow: 0 6px 24px rgba(0,0,0,0.45);
+  }
+  .chip, .seg, .btn-soft, .act, .nf, .near-region select, .tabbar, .sheet, .near-item, .course, .card { background: var(--card); color: var(--ink); }
+  .tabbar { border-top-color: var(--line); }
+  .switch .slider { background: #564b58; }
+  .stop-tags span { background: #332a33; color: #c9b8c2; }
+  .stop-blog { background: #2c2230; color: #cdb8c4; }
+  .near-addr, .stop-desc { color: var(--muted); }
+  .course-summary { color: #f3d9e1; }
+  input[type="range"] { background: var(--rose-soft); }
+  .near-thumb, .stop-thumb, .near-thumb.ph, .stop-thumb.ph { background: #3c2632; }
+  .seg.selected, .chip.selected, .nf.selected { background: #4a2c3a; border-color: var(--rose); color: #ffd0dc; }
+}

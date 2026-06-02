@@ -286,9 +286,8 @@ app.post("/api/recommend", async function (req, res) {
     const budget = ["value", "premium"].includes(body.budget) ? body.budget : "normal";
     const openNow = !!body.openNow;
     const hour = Number.isInteger(body.hour) ? body.hour : new Date().getHours();
-    const daypart = body.daypart === "morning" ? "morning"
-      : body.daypart === "afternoon" ? "afternoon"
-      : (hour < 12 ? "morning" : "afternoon");
+    const daypart = ["morning", "afternoon", "evening"].includes(body.daypart) ? body.daypart
+      : (hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening");
     const useWeather = !!body.weather;
     const excludeKeys = Array.isArray(body.excludePlaces) ? body.excludePlaces : [];
     const useLlm = !!body.useLlm;
@@ -324,6 +323,8 @@ app.post("/api/recommend", async function (req, res) {
       daypart,
     });
     if (weather) result.weather = weather;
+    result.daypart = daypart;
+    if (result.courses) result.courses.forEach((c) => { c.daypart = daypart; });
 
     if (result.courses.length) await enrichStops(result.courses, region);
 

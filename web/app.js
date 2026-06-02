@@ -1,6 +1,6 @@
 // 데이트 코스 추천 - 앱 진입/오케스트레이터 (ES 모듈)
 import { getMeta, recommend as apiRecommend, swapPlace, regionFromCoords, nearby, nearbyRegion } from "./js/api.js";
-import { savedCourses, visitedPlaces, wishPlaces, session, courseSignature, placeKey } from "./js/storage.js";
+import { savedCourses, visitedPlaces, wishPlaces, session, recents, courseSignature, placeKey, decodeCourse } from "./js/storage.js";
 import * as kmap from "./js/map.js";
 import * as kgeo from "./js/geo.js";
 import * as share from "./js/share.js";
@@ -32,6 +32,27 @@ function escapeHtml(s) {
 
 function catEmoji(cat) {
   return ({ meal: "🍽️", cafe: "☕", dessert: "🍰", bar: "🍷", activity: "🎯", culture: "🎨", walk: "🌳", nightview: "🌃" })[cat] || "📍";
+}
+
+const TAG_EMOJI = { "분위기좋은": "✨", "데이트분위기": "💕", "맛집": "🍽️", "카페": "☕", "사진맛집": "📸", "산책": "🌳", "조용한": "🤫", "활기찬": "🎉", "야경": "🌃", "전시/문화": "🎨", "액티비티": "🎯", "가성비": "💰" };
+
+// 분(자정 기준) → "오후 1:30"
+function fmtTime(min) {
+  const h = Math.floor(min / 60) % 24;
+  const m = Math.round(min % 60);
+  const ap = h < 12 ? "오전" : "오후";
+  let h12 = h % 12; if (h12 === 0) h12 = 12;
+  return `${ap} ${h12}:${String(m).padStart(2, "0")}`;
+}
+function dayStartMin(daypart) {
+  return ({ morning: 11, afternoon: 14, evening: 18 }[daypart] || 13) * 60;
+}
+
+function renderHomeHint() {
+  const r = $("#results");
+  if (r && !r.innerHTML.trim()) {
+    r.innerHTML = `<div class="home-hint">💡 <b>지역</b>과 <b>분위기</b>를 고르고 아래 <b>💕 코스 추천받기</b>를 눌러보세요.<br>고르기 귀찮다면 <b>🎲</b>로 아무거나 받아도 돼요!</div>`;
+  }
 }
 
 function distanceText(km) {
@@ -108,7 +129,7 @@ async function init() {
         state.daypart = b.dataset.daypart;
       });
     });
-    const initDp = new Date().getHours() < 12 ? "morning" : "afternoon";
+    const h = new Date().getHours(); const initDp = h < 12 ? "morning" : h < 18 ? "afternoon" : "evening";
     state.daypart = initDp;
     daypartSeg.querySelectorAll(".seg").forEach((b) => b.classList.toggle("selected", b.dataset.daypart === initDp));
   }
@@ -125,6 +146,19 @@ async function init() {
   setActiveTab("home");
   updateSavedCount();
   await restoreSession();
+  await openSharedCourse();
+  renderHomeHint();
+}
+
+async function openSharedCourse() {
+  try {
+    const enc = new URLSearchParams(location.search).get("c");
+    if (!enc) return;
+    const c = decodeCourse(enc);
+    if (!c) return;
+    await renderResults({ region: c.region || (c.stops[0] && c.stops[0].region) || "", courses: [c] });
+    enterResults();
+  } catch { /* 무시 */ }
 }
 
 function showResultsDom() {
@@ -511,7 +545,7 @@ async function useCurrentLocation() {
 
 function syncTagChips() {
   $("#tags").querySelectorAll(".chip").forEach((el) => {
-    el.classList.toggle("selected", state.tags.has(el.textContent));
+    el.classList.toggle("selected", state.tags.has(el.dataset.tag));
   });
 }
 
@@ -540,7 +574,8 @@ function renderTags(tags) {
   tags.forEach((t) => {
     const el = document.createElement("div");
     el.className = "chip";
-    el.textContent = t;
+    el.dataset.tag = t;
+    el.textContent = `${TAG_EMOJI[t] ? TAG_EMOJI[t] + " " : ""}${t}`;
     el.addEventListener("click", () => {
       if (state.tags.has(t)) { state.tags.delete(t); el.classList.remove("selected"); }
       else { state.tags.add(t); el.classList.add("selected"); }
@@ -588,6 +623,7 @@ async function recommend() {
     const data = await apiRecommend(body);
     await renderResults(data);
     session.save({ ui: snapshotUI(), data });
+    if (data.courses && data.courses[0]) recents.add(data.courses[0]);
   } catch {
     results.innerHTML = `<div class="empty">추천 중 오류가 발생했어요. 다시 시도해 주세요.</div>`;
   } finally {
@@ -615,6 +651,15 @@ async function renderResults(data) {
 function renderCourse(course, homeRegion, savedSigs, visitedKeys, wishKeys) {
   const sig = courseSignature(course);
   courseRegistry.set(sig, course);
+
+  // 각 장소 예상 도착 시각(시작 시간대 + 누적 체류·이동)
+  let _cur = dayStartMin(course.daypart);
+  const arrivals = course.stops.map((s, i) => {
+    if (i > 0) _cur += (s.legMin || 0);
+    const a = _cur;
+    _cur += (s.avgMinutes || 60);
+    return a;
+  });
   const saved = savedSigs ? savedSigs.has(sig) : false;
 
   const hours = Math.floor(course.totalMinutes / 60);
@@ -648,7 +693,7 @@ function renderCourse(course, homeRegion, savedSigs, visitedKeys, wishKeys) {
           <div class="stop-rail"><div class="stop-dot">${i + 1}</div><div class="stop-line"></div></div>
           <div class="stop-body">
             ${thumb}
-            <div class="stop-cat">${s.categoryLabel}${regionTag}</div>
+            <div class="stop-cat"><span class="stop-time">🕒 ${fmtTime(arrivals[i])}</span>${s.categoryLabel}${regionTag}</div>
             <div class="stop-name"><a href="${kmap.searchUrl(s.name)}" target="_blank" rel="noopener">${s.name}</a></div>
             <div class="stop-desc">${s.description || ""}</div>
             <div class="stop-tags">${tags}</div>
@@ -726,7 +771,13 @@ async function renderSaved() {
         items.map((v) => `<div class="visited-row"><span>${escapeHtml(v.name)}<small> · ${escapeHtml(v.region)}</small></span><button class="x" type="button" data-action="${unAction}" data-key="${escapeHtml(v.key)}">✕</button></div>`).join("") +
         `</div>`
       : "";
-  box.innerHTML = savedHtml + section("가본 곳", visited, "clear-visited", "unvisit") + section("가보고 싶은 곳", wish, "clear-wish", "unwish");
+  const rec = await recents.list();
+  const recHtml = rec.length
+    ? `<div class="saved-section"><div class="visited-head"><b>최근 추천 ${rec.length}</b><button class="link-btn" type="button" data-action="clear-recents">비우기</button></div>` +
+      rec.map((r) => `<div class="visited-row"><span>${escapeHtml(r.course.title)}<small> · ${escapeHtml(r.course.region || "")}</small></span><button class="link-btn" type="button" data-action="open-recent" data-sig="${escapeHtml(r.sig)}">열기</button></div>`).join("") +
+      `</div>`
+    : "";
+  box.innerHTML = savedHtml + recHtml + section("가본 곳", visited, "clear-visited", "unvisit") + section("가보고 싶은 곳", wish, "clear-wish", "unwish");
 }
 
 // ── 지도 ──
@@ -777,6 +828,8 @@ function onAction(e) {
   if (a === "wish") return toggleWish(el);
   if (a === "unwish") return unwish(el.dataset.key);
   if (a === "clear-wish") return clearWish();
+  if (a === "open-recent") return openRecent(el.dataset.sig);
+  if (a === "clear-recents") return clearRecents();
   if (a === "back-settings") return history.back();
   if (a === "redo") return recommend();
   if (a === "tab-home") return goHome();
@@ -878,6 +931,16 @@ async function toggleWish(el) {
 }
 async function unwish(key) { await wishPlaces.remove(key); await renderSaved(); }
 async function clearWish() { await wishPlaces.clear(); await renderSaved(); }
+
+async function openRecent(sig) {
+  const l = await recents.list();
+  const it = l.find((x) => x.sig === sig);
+  if (!it) return;
+  $("#savedPanel").hidden = true;
+  await renderResults({ region: it.course.region || "", courses: [it.course] });
+  enterResults();
+}
+async function clearRecents() { await recents.clear(); await renderSaved(); }
 
 // 서비스 워커 등록 (설치형 PWA)
 if ("serviceWorker" in navigator) {
