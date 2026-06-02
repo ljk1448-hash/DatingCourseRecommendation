@@ -2,6 +2,16 @@
 // - 지역명(예: "서울 강남구") 기준 카카오 키워드 검색으로 장소를 가져온다.
 // - 네이버 블로그 검색으로 후기 텍스트 → 감성 태그 + 대표 후기 1줄을 만든다.
 
+// 데이트 코스에 부적절한 장소 제외 (전시 검색 시 웨딩홀/회의장 등 섞이는 문제)
+const BLOCK_KEYWORDS = [
+  "웨딩", "예식", "컨벤션", "컨퍼런스", "회의", "연회", "세미나", "장례", "상조", "납골",
+  "결혼정보", "부동산", "공인중개", "병원", "의원", "약국", "한의원", "치과", "학원", "고시원",
+];
+function isBlockedPlace(name, catText) {
+  const t = `${name || ""} ${catText || ""}`;
+  return BLOCK_KEYWORDS.some((k) => t.includes(k));
+}
+
 const AVG_MIN = {
   meal: 70, cafe: 50, dessert: 45, bar: 80,
   activity: 80, culture: 80, walk: 60, nightview: 70,
@@ -106,7 +116,14 @@ export async function kakaoKeyword(regionName, query, kakaoKey, perQuery = 8) {
     throw err;
   }
   const data = await res.json();
-  return (data.documents || []).map((d) => ({
+  const district = regionName.split(" ").slice(1).join(" ").trim(); // "유성구" / "춘천시" / "" (시도만)
+  return (data.documents || [])
+    .filter((d) => {
+      if (!district) return true;
+      const addr = `${d.road_address_name || ""} ${d.address_name || ""}`;
+      return addr.includes(district); // 선택한 구가 아닌 곳(예: 중구) 혼입 방지
+    })
+    .map((d) => ({
     id: `k-${d.id || slugify(d.place_name)}`,
     name: d.place_name,
     region: regionName,
@@ -128,7 +145,7 @@ export async function naverBlog(name, region, naverId, naverSecret) {
   if (!naverId || !naverSecret) return null;
   const url = new URL("https://openapi.naver.com/v1/search/blog.json");
   url.searchParams.set("query", `${name} ${region}`);
-  url.searchParams.set("display", "5");
+  url.searchParams.set("display", "10");
   url.searchParams.set("sort", "sim");
   const res = await fetch(url, {
     headers: { "X-Naver-Client-Id": naverId, "X-Naver-Client-Secret": naverSecret },
@@ -162,6 +179,7 @@ export async function fetchRegionPlaces(regionName, kakaoKey, perQuery = 8, budg
   for (const batch of batches) {
     for (const p of batch) {
       if (!p.name || !Number.isFinite(p.lat) || !Number.isFinite(p.lng)) continue;
+      if (isBlockedPlace(p.name, p.description || p.categoryName)) continue;
       const key = p.name + "|" + p.address;
       if (seen.has(key)) continue;
       seen.add(key);
@@ -293,6 +311,7 @@ export async function fetchNearbyPlaces(lat, lng, kakaoKey, radius = 1500) {
   for (const batch of batches) {
     for (const p of batch) {
       if (!p.name || !Number.isFinite(p.lat) || !Number.isFinite(p.lng)) continue;
+      if (isBlockedPlace(p.name, p.description || p.categoryName)) continue;
       const key = p.name + "|" + p.address;
       if (seen.has(key)) continue;
       seen.add(key);

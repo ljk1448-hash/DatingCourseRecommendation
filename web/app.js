@@ -22,6 +22,7 @@ const state = {
 const courseRegistry = new Map();
 
 const $ = (sel) => document.querySelector(sel);
+let _downTarget = null; // 오버레이 배경 탭 판별(삭제로 인한 click 리타겟 방지)
 
 function escapeHtml(s) {
   return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
@@ -106,6 +107,16 @@ async function init() {
   // 전역 액션 위임 (저장/지도/시트 닫기 등)
   document.addEventListener("click", onAction);
   window.addEventListener("popstate", onPopState);
+  document.addEventListener("pointerdown", (e) => { _downTarget = e.target; }, true);
+  const CapApp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+  if (CapApp && CapApp.addListener) {
+    CapApp.addListener("backButton", () => {
+      if (!$("#mapModal").hidden) { $("#mapModal").hidden = true; return; }
+      if (!$("#savedPanel").hidden) { $("#savedPanel").hidden = true; setActiveTab(document.body.classList.contains("nearby-mode") ? "nearby" : "home"); return; }
+      if (document.body.classList.contains("results-mode") || document.body.classList.contains("nearby-mode")) { showSettingsDom(); return; }
+      CapApp.exitApp();
+    });
+  }
   window.addEventListener("online", updateOnline);
   window.addEventListener("offline", updateOnline);
   updateOnline();
@@ -365,11 +376,7 @@ async function restoreSession() {
   if (!sv || !sv.ui) return;
   if (Date.now() - (sv.ts || 0) > 24 * 60 * 60 * 1000) return;
   try {
-    restoreUI(sv.ui);
-    if (sv.data && sv.data.courses && sv.data.courses.length) {
-      await renderResults(sv.data);
-      enterResults();
-    }
+    restoreUI(sv.ui); // 선택값만 복원 — 항상 홈 화면으로 시작(이전 결과 자동 표시 안 함)
   } catch { /* 복원 실패 무시 */ }
 }
 
@@ -749,8 +756,8 @@ function mapFallbackHtml(course) {
 
 // 전역 액션 위임
 function onAction(e) {
-  if (e.target.id === "savedPanel") return history.back();
-  if (e.target.id === "mapModal") return history.back();
+  if (e.target.id === "savedPanel") { if (_downTarget && _downTarget.id === "savedPanel") history.back(); return; }
+  if (e.target.id === "mapModal") { if (_downTarget && _downTarget.id === "mapModal") history.back(); return; }
   const el = e.target.closest("[data-action]");
   if (!el) return;
   const a = el.dataset.action;
