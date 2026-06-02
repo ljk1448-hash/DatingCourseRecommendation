@@ -58,6 +58,17 @@
         </div>
       </div>
 
+      <div class="field">
+        <label>📍 출발지 <small>(선택 · 만나는 곳 기준 추천)</small></label>
+        <div class="start-row">
+          <input type="text" id="startInput" placeholder="역·가게·랜드마크 검색" autocomplete="off" />
+          <button type="button" class="mini-btn" id="startSearchBtn">검색</button>
+          <button type="button" class="mini-btn" id="startLocBtn" title="현재 위치">📍</button>
+        </div>
+        <div id="startResults" class="start-results" hidden></div>
+        <div id="startChosen" class="start-chosen" hidden></div>
+      </div>
+
       <div class="field" id="distanceField">
         <label for="distance">이동 거리 조절 <span id="distanceLabel" class="pill">보통 · 약 5km</span></label>
         <input type="range" id="distance" min="1" max="20" step="1" value="5" />

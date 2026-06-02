@@ -459,3 +459,19 @@ body.nearby-mode { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
   .near-thumb, .stop-thumb, .near-thumb.ph, .stop-thumb.ph { background: #3c2632; }
   .seg.selected, .chip.selected, .nf.selected { background: #4a2c3a; border-color: var(--rose); color: #ffd0dc; }
 }
+
+/* 출발지 검색 UI */
+.start-row { display: flex; gap: 6px; }
+.start-row input { flex: 1; min-width: 0; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 12px; font-size: 14px; background: #fff; color: var(--ink); }
+.start-results { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; max-height: 230px; overflow-y: auto; }
+.start-item { text-align: left; background: #fff; border: 1.5px solid var(--line); border-radius: 12px; padding: 10px 12px; cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
+.start-item b { font-size: 14px; }
+.start-item small { font-size: 12px; color: var(--muted); }
+.start-item:active { transform: scale(0.99); }
+.start-loading { color: var(--muted); font-size: 13px; padding: 8px 2px; }
+.start-chosen { margin-top: 8px; font-size: 14px; font-weight: 600; color: var(--rose-deep); display: flex; align-items: center; gap: 6px; }
+.start-clear { background: none; border: none; color: var(--muted); font-size: 15px; cursor: pointer; }
+.map-pin.map-start { background: #3b82f6; }
+@media (prefers-color-scheme: dark) {
+  .start-row input, .start-item { background: var(--card); color: var(--ink); }
+}

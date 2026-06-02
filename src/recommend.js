@@ -67,7 +67,7 @@ function matchScore(place, desiredTags, budget = "normal") {
 }
 
 /** 한 코스를 greedy 로 구성 */
-function buildCourse(candidates, { desiredTags, budgetKm, stops, includeNight, seedIndex, mode = "walk", budget = "normal", daypart = "afternoon" }) {
+function buildCourse(candidates, { desiredTags, budgetKm, stops, includeNight, seedIndex, mode = "walk", budget = "normal", daypart = "afternoon", start = null }) {
   const caps = categoryCaps();
   const W_MATCH = 2;
   const W_DIST = mode === "car" ? 0.2 : 1.5;
@@ -78,40 +78,41 @@ function buildCourse(candidates, { desiredTags, budgetKm, stops, includeNight, s
 
   if (pool.length === 0) return null;
 
-  // 점수 높은 순 정렬 후 seedIndex 로 시작점 다양화
   pool.sort((a, b) => b._score - a._score || a.id.localeCompare(b.id));
-  const seed = pool[seedIndex % pool.length];
 
-  const chosen = [seed];
-  const usedCat = { [seed.category]: 1 };
+  const hasStart = start && Number.isFinite(start.lat) && Number.isFinite(start.lng);
+  const chosen = [];
+  const usedCat = {};
   let totalKm = 0;
 
-  while (chosen.length < stops) {
-    const last = chosen[chosen.length - 1];
-    let best = null;
-    let bestVal = -Infinity;
-    let bestKm = 0;
+  // 출발지 없으면 점수 1위(seed)로 시작, 있으면 출발지에서 가까운 곳부터 채움
+  if (!hasStart) {
+    const seed = pool[seedIndex % pool.length];
+    chosen.push(seed);
+    usedCat[seed.category] = 1;
+  }
 
+  while (chosen.length < stops) {
+    const from = chosen.length ? chosen[chosen.length - 1] : start;
+    const scored = [];
     for (const cand of pool) {
       if (chosen.some((c) => c.id === cand.id)) continue;
       const cnt = usedCat[cand.category] || 0;
       if (cnt >= (caps[cand.category] ?? 1)) continue;
-
-      const km = travelKm(last, cand);
+      const km = from ? travelKm(from, cand) : 0;
       if (totalKm + km > budgetKm) continue;
-
-      const val = cand._score * W_MATCH - km * W_DIST;
-      if (val > bestVal) {
-        bestVal = val;
-        best = cand;
-        bestKm = km;
-      }
+      scored.push({ cand, km, val: cand._score * W_MATCH - km * W_DIST });
     }
-
-    if (!best) break; // 예산/후보 소진
-    chosen.push(best);
-    usedCat[best.category] = (usedCat[best.category] || 0) + 1;
-    totalKm += bestKm;
+    if (!scored.length) break;
+    scored.sort((a, b) => b.val - a.val);
+    let pick = scored[0];
+    if (chosen.length === 0 && hasStart) {
+      const topK = scored.slice(0, Math.min(6, scored.length)); // 출발지 기준 첫 정거장 다양화
+      pick = topK[seedIndex % topK.length];
+    }
+    chosen.push(pick.cand);
+    usedCat[pick.cand.category] = (usedCat[pick.cand.category] || 0) + 1;
+    totalKm += pick.km;
   }
 
   return orderAndSummarize(chosen, desiredTags, mode, daypart);
@@ -228,6 +229,7 @@ export function recommendCourses({
   seedOffset = 0,
   count = 3,
   daypart = "afternoon",
+  start = null,
 }) {
   const allow = regions && regions.length ? new Set(regions) : (region ? new Set([region]) : null);
   const exCats = new Set(excludeCategories || []);
@@ -259,6 +261,7 @@ export function recommendCourses({
       mode,
       budget,
       daypart,
+      start,
     });
     if (!course || course.stops.length < 2) continue;
     const sig = signature(course);

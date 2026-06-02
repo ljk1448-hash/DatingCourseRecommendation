@@ -1,5 +1,5 @@
 // 간단한 오프라인 캐시용 서비스 워커
-const CACHE = "date-course-v24";
+const CACHE = "date-course-v25";
 const ASSETS = [
   "./", "./index.html", "./styles.css", "./app.js",
   "./js/api.js", "./js/config.js", "./js/storage.js", "./js/map.js", "./js/geo.js", "./js/share.js",

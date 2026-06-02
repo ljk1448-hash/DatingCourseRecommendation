@@ -7,7 +7,7 @@ import { timingSafeEqual, createHash } from "node:crypto";
 
 import { recommendCourses } from "../src/recommend.js";
 import { describeCourse, llmEnabled } from "../src/llm.js";
-import { fetchRegionPlaces, fetchNearbyPlaces, kakaoRegionCenter, naverBlog, naverImage, naverLocal, kakaoCoord2Region } from "../src/sources.js";
+import { fetchRegionPlaces, fetchNearbyPlaces, kakaoRegionCenter, kakaoPlaceSearch, naverBlog, naverImage, naverLocal, kakaoCoord2Region } from "../src/sources.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..");
@@ -321,6 +321,8 @@ app.post("/api/recommend", async function (req, res) {
       seedOffset: Number.isInteger(body.seed) ? body.seed : 0,
       count: 3,
       daypart,
+      start: body.start && Number.isFinite(Number(body.start.lat)) && Number.isFinite(Number(body.start.lng))
+        ? { lat: Number(body.start.lat), lng: Number(body.start.lng) } : null,
     });
     if (weather) result.weather = weather;
     result.daypart = daypart;
@@ -463,6 +465,21 @@ app.get("/app-release.apk", function (req, res) {
   }, function (err) {
     if (err && !res.headersSent) res.status(404).send("apk not found");
   });
+});
+
+// 출발지 장소 검색
+app.get("/api/place-search", async function (req, res) {
+  try {
+    if (!liveEnabled) return res.status(400).json({ error: "서버에 검색 키가 없어요." });
+    const q = String(req.query.q || "").trim();
+    if (!q) return res.json({ places: [] });
+    const region = String(req.query.region || "").trim();
+    const query = region ? `${region} ${q}` : q;
+    const places = await kakaoPlaceSearch(query, KAKAO_KEY, 6);
+    res.json({ places });
+  } catch (err) {
+    res.status(502).json({ error: kakaoErrorMessage(err) });
+  }
 });
 
 // 프론트엔드 정적 서빙

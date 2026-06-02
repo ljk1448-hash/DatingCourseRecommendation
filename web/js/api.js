@@ -44,3 +44,10 @@ export async function nearbyRegion(region, radius) {
   const r = await fetch(`${API_BASE}/api/nearby?${q.toString()}`);
   return r.json();
 }
+
+export async function searchPlaces(q, region) {
+  const p = new URLSearchParams({ q });
+  if (region) p.set("region", region);
+  const r = await fetch(`${API_BASE}/api/place-search?${p.toString()}`);
+  return r.json();
+}

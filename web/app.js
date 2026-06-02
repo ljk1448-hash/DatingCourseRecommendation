@@ -1,5 +1,5 @@
 // 데이트 코스 추천 - 앱 진입/오케스트레이터 (ES 모듈)
-import { getMeta, recommend as apiRecommend, swapPlace, regionFromCoords, nearby, nearbyRegion } from "./js/api.js";
+import { getMeta, recommend as apiRecommend, swapPlace, regionFromCoords, nearby, nearbyRegion, searchPlaces } from "./js/api.js";
 import { savedCourses, visitedPlaces, wishPlaces, session, recents, courseSignature, placeKey, decodeCourse } from "./js/storage.js";
 import * as kmap from "./js/map.js";
 import * as kgeo from "./js/geo.js";
@@ -14,6 +14,7 @@ const state = {
   lastBody: null,
   meta: null,
   daypart: "morning",
+  start: null,
   nearbyData: null,
   nearbyFilter: "all",
 };
@@ -132,6 +133,9 @@ async function init() {
   $("#recommendBtn").addEventListener("click", recommend);
   $("#locBtn")?.addEventListener("click", useCurrentLocation);
   $("#randomBtn")?.addEventListener("click", randomRecommend);
+  $("#startSearchBtn")?.addEventListener("click", doStartSearch);
+  $("#startInput")?.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); doStartSearch(); } });
+  $("#startLocBtn")?.addEventListener("click", useStartCurrentLocation);
 
   // 전역 액션 위임 (저장/지도/시트 닫기 등)
   document.addEventListener("click", onAction);
@@ -360,6 +364,7 @@ function snapshotUI() {
     transport: state.transport,
     budget: state.budget,
     daypart: state.daypart,
+    start: state.start,
     distance: +$("#distance").value,
     stops: +$("#stops").value,
     includeNight: $("#includeNight").checked,
@@ -392,6 +397,7 @@ function restoreUI(ui) {
     state.daypart = ui.daypart;
     document.querySelectorAll("#daypart .seg").forEach((b) => b.classList.toggle("selected", b.dataset.daypart === ui.daypart));
   }
+  if (ui.start) setStart(ui.start);
   if (Number.isFinite(ui.distance)) { const d = $("#distance"); d.value = String(ui.distance); d.dispatchEvent(new Event("input")); }
   if (Number.isFinite(ui.stops)) { const st = $("#stops"); st.value = String(ui.stops); st.dispatchEvent(new Event("input")); }
   if ("includeNight" in ui) $("#includeNight").checked = !!ui.includeNight;
@@ -537,6 +543,48 @@ async function useCurrentLocation() {
   } finally { done(); }
 }
 
+// ── 출발지 지정 ──
+async function doStartSearch() {
+  const q = ($("#startInput").value || "").trim();
+  if (!q) return;
+  const region = [...state.regions][0] || state.sido || "";
+  const box = $("#startResults");
+  box.hidden = false;
+  box.innerHTML = `<div class="start-loading">검색 중…</div>`;
+  try {
+    const data = await searchPlaces(q, region);
+    const ps = (data && data.places) || [];
+    if (!ps.length) { box.innerHTML = `<div class="start-loading">결과가 없어요.</div>`; return; }
+    state._startCands = ps;
+    box.innerHTML = ps.map((p, i) => `<button type="button" class="start-item" data-action="start-pick" data-i="${i}"><b>${escapeHtml(p.name)}</b><small>${escapeHtml(p.address || p.category || "")}</small></button>`).join("");
+  } catch { box.innerHTML = `<div class="start-loading">검색에 실패했어요. 잠시 후 다시.</div>`; }
+}
+function pickStart(i) {
+  const p = (state._startCands || [])[i];
+  if (p) setStart({ name: p.name, lat: p.lat, lng: p.lng });
+}
+function setStart(p) {
+  state.start = p;
+  $("#startResults").hidden = true;
+  $("#startInput").value = "";
+  const c = $("#startChosen");
+  c.hidden = false;
+  c.innerHTML = `📍 출발: <b>${escapeHtml(p.name)}</b> <button type="button" class="start-clear" data-action="start-clear">✕</button>`;
+}
+function clearStart() {
+  state.start = null;
+  const c = $("#startChosen"); c.hidden = true; c.innerHTML = "";
+}
+async function useStartCurrentLocation() {
+  const btn = $("#startLocBtn");
+  if (btn) btn.disabled = true;
+  try {
+    const pos = await getPosition();
+    setStart({ name: "현재 위치", lat: pos.coords.latitude, lng: pos.coords.longitude });
+  } catch { alert("위치 권한이 필요해요. 휴대폰 설정에서 허용해 주세요."); }
+  finally { if (btn) btn.disabled = false; }
+}
+
 function syncTagChips() {
   $("#tags").querySelectorAll(".chip").forEach((el) => {
     el.classList.toggle("selected", state.tags.has(el.dataset.tag));
@@ -600,6 +648,7 @@ async function recommend() {
     mode: state.transport,
     budget: state.budget,
     daypart: state.daypart,
+    start: state.start ? { lat: state.start.lat, lng: state.start.lng } : undefined,
     distanceKm: +$("#distance").value,
     stops: +$("#stops").value,
     includeNight: $("#includeNight").checked,
@@ -615,6 +664,7 @@ async function recommend() {
 
   try {
     const data = await apiRecommend(body);
+    if (data.courses) data.courses.forEach((c) => { c.start = state.start || null; });
     await renderResults(data);
     session.save({ ui: snapshotUI(), data });
     if (data.courses && data.courses[0]) recents.add(data.courses[0]);
@@ -637,7 +687,8 @@ async function renderResults(data) {
   const wx = data.weather
     ? `<span class="wx">${data.weather.label === "맑음" ? "☀️ 맑음" : (data.weather.label === "눈" ? "🌨️ 눈·실내 위주" : "🌧️ 비·실내 위주")}</span>`
     : "";
-  const head = `<div class="result-head">${data.region} · 추천 코스 ${data.courses.length}개 ${wx}</div>`;
+  const st = data.courses[0] && data.courses[0].start;
+  const head = `<div class="result-head">${data.region} · 추천 코스 ${data.courses.length}개 ${wx}${st ? ` · 📍 ${escapeHtml(st.name)} 출발` : ""}</div>`;
   results.innerHTML = head + data.courses.map((c) => renderCourse(c, data.region, savedSigs, visitedKeys, wishKeys)).join("");
   results.scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -835,6 +886,8 @@ function onAction(e) {
   if (a === "near-course") return nearbyToCourse();
   if (a === "near-region-toggle") { const pk = $("#nearRegionPicker"); pk.hidden = !pk.hidden; return; }
   if (a === "near-region-go") { return loadNearbyByRegion(`${$("#nearSido").value} ${$("#nearGu").value}`.trim()); }
+  if (a === "start-pick") return pickStart(Number(el.dataset.i));
+  if (a === "start-clear") return clearStart();
   if (a === "more") return toggleMore(el);
 }
 

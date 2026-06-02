@@ -347,3 +347,21 @@ export async function kakaoRegionCenter(regionName, kakaoKey) {
   const d2 = ((await r2.json()).documents || [])[0];
   return d2 ? { lat: Number(d2.y), lng: Number(d2.x) } : null;
 }
+
+// 출발지(장소) 검색 — 키워드로 후보 반환
+export async function kakaoPlaceSearch(query, kakaoKey, size = 6) {
+  const url = new URL("https://dapi.kakao.com/v2/local/search/keyword.json");
+  url.searchParams.set("query", query);
+  url.searchParams.set("size", String(size));
+  const res = await fetch(url, { headers: { Authorization: `KakaoAK ${kakaoKey}` } });
+  if (!res.ok) { const e = new Error(`kakao ${res.status}`); e.status = res.status; throw e; }
+  const data = await res.json();
+  return (data.documents || [])
+    .map((d) => ({
+      name: d.place_name,
+      address: d.road_address_name || d.address_name || "",
+      lat: Number(d.y), lng: Number(d.x),
+      category: stripHtml(d.category_name || ""),
+    }))
+    .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng));
+}
