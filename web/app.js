@@ -151,6 +151,8 @@ async function openSharedCourse() {
     const c = decodeCourse(enc);
     if (!c) return;
     await renderResults({ region: c.region || (c.stops[0] && c.stops[0].region) || "", courses: [c] });
+    const results = $("#results");
+    if (results) results.insertAdjacentHTML("afterbegin", `<div class="shared-banner">💌 친구가 보낸 코스예요!<br>마음에 들면 <b>👍</b>, 바꾸고 싶으면 <b>🔄 바꾸기</b>, 다 정했으면 <b>📤 공유</b>로 다시 보내요.</div>`);
     enterResults();
   } catch { /* 무시 */ }
 }
@@ -757,6 +759,7 @@ function renderCourse(course, homeRegion, savedSigs, visitedKeys, wishKeys) {
             ${blog}
             <div class="stop-actions">
               <a class="act act-go" href="${kmap.directionsUrl(s)}" target="_blank" rel="noopener">🧭 길찾기</a>
+              <button class="act act-like ${s.liked ? "on" : ""}" type="button" data-action="like" data-sig="${sig}" data-idx="${i}">${s.liked ? "👍 좋아요" : "👍"}</button>
               <button class="act act-wish ${wished ? "on" : ""}" type="button" data-action="wish" ${attrs}>${wished ? "💛 찜" : "🤍 찜"}</button>
               <button class="act act-more" type="button" data-action="more">⋯</button>
             </div>
@@ -764,6 +767,7 @@ function renderCourse(course, homeRegion, savedSigs, visitedKeys, wishKeys) {
               <a class="act" href="${s.url || kmap.searchUrl(s.name)}" target="_blank" rel="noopener">🕒 영업시간</a>
               ${phoneDigits ? `<a class="act" href="tel:${phoneDigits}">📞 전화</a>` : ""}
               <a class="act" href="${kmap.naverBlogSearchUrl(s.name, s.region || homeRegion)}" target="_blank" rel="noopener">📝 네이버 후기</a>
+              <a class="act" href="${kmap.naverReservationUrl(s.name, s.region || homeRegion)}" target="_blank" rel="noopener">📅 예약</a>
               <button class="act ${visited ? "on" : ""}" type="button" data-action="visit" ${attrs}>${visited ? "✓ 다녀옴" : "다녀옴"}</button>
               <button class="act" type="button" data-action="swap" data-sig="${sig}" data-idx="${i}">🔄 바꾸기</button>
             </div>
@@ -882,6 +886,7 @@ function onAction(e) {
   if (a === "share") return shareCourseAction(el.dataset.sig);
   if (a === "swap") return swapStop(el.dataset.sig, Number(el.dataset.idx), el);
   if (a === "wish") return toggleWish(el);
+  if (a === "like") return toggleLike(el.dataset.sig, Number(el.dataset.idx), el);
   if (a === "unwish") return unwish(el.dataset.key);
   if (a === "clear-wish") return clearWish();
   if (a === "open-recent") return openRecent(el.dataset.sig);
@@ -989,6 +994,15 @@ async function toggleWish(el) {
 }
 async function unwish(key) { await wishPlaces.remove(key); await renderSaved(); }
 async function clearWish() { await wishPlaces.clear(); await renderSaved(); }
+
+// 공유 코스 '같이 정하기' — 장소별 👍(코스에 인코딩되어 다시 공유 시 함께 전달)
+function toggleLike(sig, idx, btn) {
+  const course = courseRegistry.get(sig);
+  if (!course || !course.stops[idx]) return;
+  const now = !course.stops[idx].liked;
+  course.stops[idx].liked = now;
+  if (btn) { btn.classList.toggle("on", now); btn.textContent = now ? "👍 좋아요" : "👍"; }
+}
 
 async function openRecent(sig) {
   const l = await recents.list();

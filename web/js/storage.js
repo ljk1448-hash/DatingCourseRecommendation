@@ -109,6 +109,7 @@ export function encodeCourse(course) {
       name: s.name, region: s.region, category: s.category, categoryLabel: s.categoryLabel,
       lat: s.lat, lng: s.lng, address: s.address, description: s.description,
       tags: s.tags, avgMinutes: s.avgMinutes, legKm: s.legKm, legMin: s.legMin, phone: s.phone,
+      url: s.url, liked: s.liked,
     })),
   };
   try { return b64urlEncode(JSON.stringify(slim)); } catch { return ""; }

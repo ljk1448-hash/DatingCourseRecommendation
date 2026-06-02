@@ -480,3 +480,12 @@ body.nearby-mode { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
 .start-asstop { display: flex; align-items: center; gap: 7px; margin-top: 8px; font-size: 13px; font-weight: 500; color: var(--ink); cursor: pointer; }
 .start-asstop input { width: 16px; height: 16px; accent-color: var(--rose); }
 .map-pin.map-end { background: #16a34a; }
+
+/* 공유 코스 '같이 정하기' */
+.act-like.on { background: #e0f0ff; border-color: #7cc0ff; color: #1366c4; }
+.shared-banner { background: var(--rose-soft); color: #6b3a45; border-radius: 12px; padding: 12px 14px; font-size: 13px; line-height: 1.6; margin-bottom: 12px; text-align: center; }
+.shared-banner b { color: var(--rose-deep); }
+@media (prefers-color-scheme: dark) {
+  .act-like.on { background: #1e3a5f; border-color: #2f5f9e; color: #bcd9ff; }
+  .shared-banner { color: #f3d9e1; }
+}

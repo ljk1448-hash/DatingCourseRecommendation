@@ -78,3 +78,9 @@ export async function renderNearbyMap(container, center, places, jsKey) {
   map.setBounds(bounds);
   return map;
 }
+
+// 네이버 '예약' 검색(예약 가능하면 예약 버튼이 노출됨) — 키 불필요
+export function naverReservationUrl(name, region) {
+  const q = `${name} ${region || ""} 예약`.trim();
+  return `https://search.naver.com/search.naver?query=${encodeURIComponent(q)}`;
+}
