@@ -110,15 +110,6 @@ async function init() {
     });
   });
 
-  const budgetSeg = $("#budget");
-  if (budgetSeg) budgetSeg.querySelectorAll(".seg").forEach((b) => {
-    b.addEventListener("click", () => {
-      budgetSeg.querySelectorAll(".seg").forEach((x) => x.classList.remove("selected"));
-      b.classList.add("selected");
-      state.budget = b.dataset.budget;
-    });
-  });
-
   const daypartSeg = $("#daypart");
   if (daypartSeg) {
     daypartSeg.querySelectorAll(".seg").forEach((b) => {
@@ -375,7 +366,6 @@ function snapshotUI() {
     stops: +$("#stops").value,
     includeNight: $("#includeNight").checked,
     nearby: $("#nearby").checked,
-    openNow: $("#openNow").checked,
     weather: $("#weather").checked,
     excludeVisited: $("#excludeVisited").checked,
   };
@@ -409,7 +399,6 @@ function restoreUI(ui) {
   if (Number.isFinite(ui.stops)) { const st = $("#stops"); st.value = String(ui.stops); st.dispatchEvent(new Event("input")); }
   if ("includeNight" in ui) $("#includeNight").checked = !!ui.includeNight;
   if ("nearby" in ui) $("#nearby").checked = !!ui.nearby;
-  if ("openNow" in ui) $("#openNow").checked = !!ui.openNow;
   if ("weather" in ui) $("#weather").checked = !!ui.weather;
   if ("excludeVisited" in ui) $("#excludeVisited").checked = !!ui.excludeVisited;
 }
@@ -676,7 +665,6 @@ async function recommend() {
     stops: +$("#stops").value,
     includeNight: $("#includeNight").checked,
     nearby: $("#nearby").checked,
-    openNow: $("#openNow").checked,
     hour: new Date().getHours(),
     weather: $("#weather").checked,
     seed: Math.floor(Math.random() * 100000),
@@ -794,7 +782,6 @@ function renderCourse(course, homeRegion, savedSigs, visitedKeys, wishKeys) {
         <button class="btn-soft" type="button" data-action="map" data-sig="${sig}">🗺️ 지도</button>
         <button class="btn-soft btn-save ${saved ? "on" : ""}" type="button" data-action="save" data-sig="${sig}">${saved ? "♥ 저장됨" : "♡ 저장"}</button>
         <button class="btn-soft" type="button" data-action="share" data-sig="${sig}">📤 공유</button>
-        <button class="btn-soft" type="button" data-action="image" data-sig="${sig}">🖼️ 이미지</button>
       </div>
     </div>`;
 }
@@ -893,7 +880,6 @@ function onAction(e) {
   if (a === "unvisit") return unvisit(el.dataset.key);
   if (a === "clear-visited") return clearVisited();
   if (a === "share") return shareCourseAction(el.dataset.sig);
-  if (a === "image") return imageCourseAction(el.dataset.sig, el);
   if (a === "swap") return swapStop(el.dataset.sig, Number(el.dataset.idx), el);
   if (a === "wish") return toggleWish(el);
   if (a === "unwish") return unwish(el.dataset.key);
