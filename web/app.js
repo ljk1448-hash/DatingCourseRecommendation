@@ -44,6 +44,19 @@ function distanceText(km) {
 
 async function init() {
   requestLocationOnStartup(); // 서버 응답과 무관하게 앱 시작 즉시 권한 요청
+
+  // 하드웨어 뒤로가기/히스토리 — 서버 응답 전에 먼저 등록(결과→홈, 홈에서만 종료)
+  window.addEventListener("popstate", onPopState);
+  document.addEventListener("pointerdown", (e) => { _downTarget = e.target; }, true);
+  const CapApp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+  if (CapApp && CapApp.addListener) {
+    CapApp.addListener("backButton", () => {
+      if (!$("#mapModal").hidden) { $("#mapModal").hidden = true; return; }
+      if (!$("#savedPanel").hidden) { $("#savedPanel").hidden = true; setActiveTab(document.body.classList.contains("nearby-mode") ? "nearby" : "home"); return; }
+      if (document.body.classList.contains("results-mode") || document.body.classList.contains("nearby-mode")) { showSettingsDom(); return; }
+      CapApp.exitApp();
+    });
+  }
   try {
     state.meta = await getMeta();
   } catch {
@@ -106,17 +119,6 @@ async function init() {
 
   // 전역 액션 위임 (저장/지도/시트 닫기 등)
   document.addEventListener("click", onAction);
-  window.addEventListener("popstate", onPopState);
-  document.addEventListener("pointerdown", (e) => { _downTarget = e.target; }, true);
-  const CapApp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
-  if (CapApp && CapApp.addListener) {
-    CapApp.addListener("backButton", () => {
-      if (!$("#mapModal").hidden) { $("#mapModal").hidden = true; return; }
-      if (!$("#savedPanel").hidden) { $("#savedPanel").hidden = true; setActiveTab(document.body.classList.contains("nearby-mode") ? "nearby" : "home"); return; }
-      if (document.body.classList.contains("results-mode") || document.body.classList.contains("nearby-mode")) { showSettingsDom(); return; }
-      CapApp.exitApp();
-    });
-  }
   window.addEventListener("online", updateOnline);
   window.addEventListener("offline", updateOnline);
   updateOnline();
