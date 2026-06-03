@@ -518,9 +518,11 @@ app.get("/api/place-search", async function (req, res) {
     const q = String(req.query.q || "").trim();
     if (!q) return res.json({ places: [] });
     const region = String(req.query.region || "").trim();
-    const sido = region.split(" ")[0]; // "대전 유성구" → "대전" (구까지 붙이면 검색이 너무 좁아짐)
-    const query = sido ? `${sido} ${q}` : q;
-    const places = await kakaoPlaceSearch(query, KAKAO_KEY, 8);
+    let opts = {};
+    if (region) {
+      try { const c = await kakaoRegionCenter(region, KAKAO_KEY); if (c) opts = { x: c.lng, y: c.lat }; } catch {}
+    }
+    const places = await kakaoPlaceSearch(q, KAKAO_KEY, 8, opts);
     res.json({ places });
   } catch (err) {
     res.status(502).json({ error: kakaoErrorMessage(err) });

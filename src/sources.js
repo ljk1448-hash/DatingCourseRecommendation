@@ -350,10 +350,15 @@ export async function kakaoRegionCenter(regionName, kakaoKey) {
 }
 
 // 출발지(장소) 검색 — 키워드로 후보 반환
-export async function kakaoPlaceSearch(query, kakaoKey, size = 6) {
+export async function kakaoPlaceSearch(query, kakaoKey, size = 8, opts = {}) {
   const url = new URL("https://dapi.kakao.com/v2/local/search/keyword.json");
   url.searchParams.set("query", query);
   url.searchParams.set("size", String(size));
+  if (Number.isFinite(opts.x) && Number.isFinite(opts.y)) {
+    url.searchParams.set("x", String(opts.x));
+    url.searchParams.set("y", String(opts.y));
+    url.searchParams.set("sort", "distance"); // 선택 지역 좌표 기준 가까운 순(이름은 그대로)
+  }
   const res = await fetch(url, { headers: { Authorization: `KakaoAK ${kakaoKey}` } });
   if (!res.ok) { const e = new Error(`kakao ${res.status}`); e.status = res.status; throw e; }
   const data = await res.json();
